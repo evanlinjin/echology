@@ -1,46 +1,21 @@
 use std::collections::BTreeMap;
-use std::collections::HashMap;
 
 use async_std::sync::Arc;
 use async_std::sync::RwLock;
 
 use async_std::task::JoinHandle;
+use bdk_bitcoind_rpc::bitcoincore_rpc::jsonrpc::serde_json::Value;
 use bdk_chain::bitcoin::Address;
-use bdk_chain::bitcoin::OutPoint;
+use bdk_chain::bitcoin::Amount;
 use bdk_chain::local_chain::LocalChain;
-use bdk_chain::ConfirmationHeightAnchor;
-use bdk_chain::IndexedTxGraph;
-use bdk_chain::SpkTxOutIndex;
 use bitcoind::bitcoincore_rpc::RpcApi;
 use tide::prelude::*;
 use tide::Request;
+use wally::Wally;
 
-type Sha256Key = bdk_chain::bitcoin::hashes::sha256::Hash;
+mod wally;
 
 const BLOCK_TIME_SECONDS: u64 = 30;
-
-struct ScenarioCandidate {
-    pub outpoint: OutPoint,
-    pub must_select: bool,
-}
-
-struct ScenarioRecipient {
-    pub address: Address,
-    pub amount: u64,
-}
-
-struct SpendScenario {
-    pub candidates: Vec<ScenarioCandidate>,
-    pub recipients: Vec<ScenarioRecipient>,
-    pub max_extra_target: u64,
-    pub fee_rate: f32,                   // sats per wu
-    pub long_term_fee_rate: Option<f32>, // sats per wu
-}
-
-struct Wallet {
-    indexed_tx_graph: IndexedTxGraph<ConfirmationHeightAnchor, SpkTxOutIndex<()>>,
-    spend_scenarios: HashMap<Sha256Key, SpendScenario>,
-}
 
 type EchologyJoinHandles = [JoinHandle<tide::Result<()>>; 3];
 
@@ -48,7 +23,7 @@ type EchologyJoinHandles = [JoinHandle<tide::Result<()>>; 3];
 struct Echology {
     pub bitcoind: Arc<bitcoind::BitcoinD>,
     pub chain: Arc<RwLock<LocalChain>>,
-    pub wallets: Arc<RwLock<BTreeMap<Sha256Key, RwLock<Wallet>>>>,
+    pub wallets: Arc<RwLock<BTreeMap<String, Arc<RwLock<Wally>>>>>,
 }
 
 impl Echology {
@@ -163,6 +138,20 @@ impl Echology {
 
         Ok((echology, [emitter_jh, absorber_jh, miner_jh]))
     }
+
+    async fn get_or_new_wallet(&self, alias: &str) -> Arc<RwLock<Wally>> {
+        let wallet = match self.wallets.write().await.entry(alias.to_string()) {
+            std::collections::btree_map::Entry::Vacant(e) => {
+                // let wallet = Wally::new(phrase)
+                // e.
+                todo!()
+            },
+            std::collections::btree_map::Entry::Occupied(e) => Arc::clone(e.get()),
+        };
+
+        // self.wallets.write().await.get(key)
+        todo!()
+    }
 }
 
 #[async_std::main]
@@ -172,6 +161,9 @@ async fn main() -> tide::Result<()> {
     let mut app = tide::with_state(state);
     app.at("/network/stats").get(network_stats);
     app.at("/network/broadcast").post(network_broadcast);
+    app.at("/decode").get(decode);
+    app.at("/faucet").get(faucet);
+    app.at("/wallet/:alias/address").get(wallet_address);
     app.listen("127.0.0.1:8080").await?;
 
     for handle in join_handles {
@@ -188,12 +180,68 @@ async fn network_stats(req: Request<Echology>) -> tide::Result {
 }
 
 async fn network_broadcast(req: Request<Echology>) -> tide::Result {
-    #[derive(Default, Deserialize)]
-    #[serde(default)]
+    #[derive(Deserialize)]
     struct Query {
         pub tx: String,
     }
     let q: Query = req.query()?;
     let txid = req.state().bitcoind.client.send_raw_transaction(q.tx)?;
     Ok(json!({ "txid": txid }).into())
+}
+
+async fn decode(req: Request<Echology>) -> tide::Result {
+    #[derive(Deserialize)]
+    struct Query {
+        pub tx: String,
+    }
+    let q: Query = req.query()?;
+    let v: Value = req
+        .state()
+        .bitcoind
+        .client
+        .call("decoderawtransaction", &[q.tx.into()])?;
+    Ok(v.into())
+}
+
+async fn faucet(req: Request<Echology>) -> tide::Result {
+    #[derive(Deserialize)]
+    struct Query {
+        pub address: Address,
+        pub amount: u64,
+    }
+    let q: Query = req.query()?;
+    let txid = req.state().bitcoind.client.send_to_address(
+        &q.address,
+        Amount::from_sat(q.amount),
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    )?;
+    Ok(json!({ "txid": txid }).into())
+}
+
+async fn wallet_address(req: Request<Echology>) -> tide::Result {
+    let alias = req.param("alias")?;
+
+    if let Some(wallet) = req.state().wallets.read().await.get(alias) {
+        let address = wallet.read().await.address();
+        return Ok(json!({ "address": address }).into());
+    }
+
+    let wallet = Wally::new(alias)?;
+    let address = wallet.address();
+    req.state()
+        .wallets
+        .write()
+        .await
+        .insert(alias.to_string(), Arc::new(RwLock::new(wallet)));
+
+    Ok(json!({ "address": address }).into())
+}
+
+async fn wallet_coins(req: Request<Echology>) -> tide::Result {
+    todo!()
 }
