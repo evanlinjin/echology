@@ -16,6 +16,7 @@ use solicitation::SolutionRequest;
 use solicitation::SolutionResponse;
 use tide::prelude::*;
 use tide::Request;
+use tide::Response;
 use wally::Scenario;
 use wally::Wally;
 
@@ -160,9 +161,14 @@ impl Echology {
 
 #[async_std::main]
 async fn main() -> tide::Result<()> {
+    // std::env::var_os("");
     let (state, join_handles) = Echology::new(bitcoind::BitcoinD::from_downloaded()?)?;
 
     let mut app = tide::with_state(state);
+    app.with(tide::utils::After(|mut resp: Response| async move {
+        resp.append_header("Access-Control-Allow-Origin", "*");
+        Ok(resp)
+    }));
     app.at("/network/stats").get(network_stats);
     app.at("/network/broadcast").post(network_broadcast);
     app.at("/decode").get(decode);
