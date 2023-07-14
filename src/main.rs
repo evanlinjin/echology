@@ -5,14 +5,21 @@ use async_std::sync::RwLock;
 
 use async_std::task::JoinHandle;
 use bdk_bitcoind_rpc::bitcoincore_rpc::jsonrpc::serde_json::Value;
+use bdk_chain::bitcoin::hashes::Hash;
 use bdk_chain::bitcoin::Address;
 use bdk_chain::bitcoin::Amount;
+use bdk_chain::bitcoin::Txid;
 use bdk_chain::local_chain::LocalChain;
 use bitcoind::bitcoincore_rpc::RpcApi;
+use solicitation::Metrics;
+use solicitation::SolutionRequest;
+use solicitation::SolutionResponse;
 use tide::prelude::*;
 use tide::Request;
+use wally::Scenario;
 use wally::Wally;
 
+mod solicitation;
 mod wally;
 
 const BLOCK_TIME_SECONDS: u64 = 30;
@@ -139,18 +146,15 @@ impl Echology {
         Ok((echology, [emitter_jh, absorber_jh, miner_jh]))
     }
 
-    async fn get_or_new_wallet(&self, alias: &str) -> Arc<RwLock<Wally>> {
-        let wallet = match self.wallets.write().await.entry(alias.to_string()) {
+    pub async fn get_or_create_wallet(&self, phrase: &str) -> tide::Result<Arc<RwLock<Wally>>> {
+        let wallet = match self.wallets.write().await.entry(phrase.to_string()) {
             std::collections::btree_map::Entry::Vacant(e) => {
-                // let wallet = Wally::new(phrase)
-                // e.
-                todo!()
-            },
+                let wallet = Arc::new(RwLock::new(Wally::new(phrase)?));
+                Arc::clone(&*e.insert(wallet))
+            }
             std::collections::btree_map::Entry::Occupied(e) => Arc::clone(e.get()),
         };
-
-        // self.wallets.write().await.get(key)
-        todo!()
+        Ok(wallet)
     }
 }
 
@@ -164,6 +168,11 @@ async fn main() -> tide::Result<()> {
     app.at("/decode").get(decode);
     app.at("/faucet").get(faucet);
     app.at("/wallet/:alias/address").get(wallet_address);
+    app.at("/wallet/:alias/coins").get(wallet_coins);
+    app.at("/wallet/:alias/new_spend_scenario")
+        .post(wallet_new_spend_scenario);
+    app.at("/wallet/:alias/new_solution")
+        .post(wallet_new_solution);
     app.listen("127.0.0.1:8080").await?;
 
     for handle in join_handles {
@@ -225,23 +234,49 @@ async fn faucet(req: Request<Echology>) -> tide::Result {
 
 async fn wallet_address(req: Request<Echology>) -> tide::Result {
     let alias = req.param("alias")?;
-
-    if let Some(wallet) = req.state().wallets.read().await.get(alias) {
-        let address = wallet.read().await.address();
-        return Ok(json!({ "address": address }).into());
-    }
-
-    let wallet = Wally::new(alias)?;
-    let address = wallet.address();
-    req.state()
-        .wallets
-        .write()
-        .await
-        .insert(alias.to_string(), Arc::new(RwLock::new(wallet)));
-
+    let wallet = req.state().get_or_create_wallet(alias).await?;
+    let address = wallet.read().await.address();
     Ok(json!({ "address": address }).into())
 }
 
 async fn wallet_coins(req: Request<Echology>) -> tide::Result {
-    todo!()
+    let alias = req.param("alias")?;
+    let wallet = req.state().get_or_create_wallet(alias).await?;
+    let chain = req.state().chain.read().await;
+    let coins = wallet.read().await.coins(&chain);
+    Ok(json!({ "coins": coins }).into())
+}
+
+async fn wallet_new_spend_scenario(mut req: Request<Echology>) -> tide::Result {
+    let scenario: Scenario = req.body_json().await?;
+    let alias = req.param("alias")?;
+
+    let wallet = req.state().get_or_create_wallet(alias).await?;
+    let spend_scenario_id = wallet.write().await.new_spend_scenario(scenario)?;
+
+    Ok(json!({ "spend_scenario_id": spend_scenario_id }).into())
+}
+
+async fn wallet_new_solution(mut req: Request<Echology>) -> tide::Result {
+    let solution_req: SolutionRequest = req.body_json().await?;
+    let alias = req.param("alias")?;
+
+    let _wallet = req.state().get_or_create_wallet(alias).await?;
+    let epoch = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .expect("must get time")
+        .as_secs();
+
+    Ok(json!(SolutionResponse {
+        request: solution_req,
+        timestamp: epoch,
+        txid: Txid::all_zeros(),
+        raw_tx: "01000000010470c3139dc0f0882f98d75ae5bf957e68dadd32c5f81261c0b13e85f592ff7b0000000000ffffffff02b286a61e000000001976a9140f39a0043cf7bdbe429c17e8b514599e9ec53dea88ac01000000000000001976a9148a8c9fd79173f90cf76410615d2a52d12d27d21288ac00000000".to_string(),
+        metrics: Metrics {
+            waste: 0.0,
+            feerate_deviation: 0.0,
+            target_deviation: 0,
+            tx_size: 0,
+        }
+    }).into())
 }
