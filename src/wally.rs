@@ -1,4 +1,6 @@
+use bdk_bitcoind_rpc::bitcoincore_rpc::jsonrpc::serde_json;
 use bdk_chain::bitcoin::hashes::sha256;
+use bdk_chain::bitcoin::hashes::Hash;
 use bdk_chain::bitcoin::secp256k1::Secp256k1;
 use bdk_chain::bitcoin::secp256k1::SecretKey;
 use bdk_chain::bitcoin::Address;
@@ -12,32 +14,10 @@ use bdk_chain::miniscript::Descriptor;
 use bdk_chain::miniscript::DescriptorPublicKey;
 use bdk_chain::ChainPosition;
 use bdk_chain::ConfirmationHeightAnchor;
-use bdk_chain::FullTxOut;
 use bdk_chain::IndexedTxGraph;
 use bdk_chain::SpkTxOutIndex;
 use std::collections::HashMap;
 use tide::prelude::*;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct ScenarioCandidate {
-    pub outpoint: OutPoint,
-    pub must_select: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct ScenarioRecipient {
-    pub address: Address,
-    pub amount: u64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct SpendScenario {
-    pub candidates: Vec<ScenarioCandidate>,
-    pub recipients: Vec<ScenarioRecipient>,
-    pub max_extra_target: u64,
-    pub fee_rate: f32,                   // sats per wu
-    pub long_term_fee_rate: Option<f32>, // sats per wu
-}
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Coin {
@@ -53,16 +33,43 @@ pub struct CoinSpentBy {
     confirmations: u32,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Scenario {
+    pub candidates: Vec<ScenarioCandidate>,
+    pub recipients: Vec<ScenarioRecipient>,
+    pub max_extra_target: u64,
+    pub fee_rate: f32,                   // sats per wu
+    pub long_term_fee_rate: Option<f32>, // sats per wu
+}
+
+impl Scenario {
+    pub fn id(&self) -> sha256::Hash {
+        let json_bytes = serde_json::ser::to_vec(self).expect("must serialize");
+        sha256::Hash::hash(&json_bytes)
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScenarioCandidate {
+    pub outpoint: OutPoint,
+    pub must_select: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScenarioRecipient {
+    pub address: Address,
+    pub amount: u64,
+}
+
 pub struct Wally {
     descriptor: Descriptor<DescriptorPublicKey>,
     keymap: HashMap<DescriptorPublicKey, DescriptorSecretKey>,
     pub indexed_tx_graph: IndexedTxGraph<ConfirmationHeightAnchor, SpkTxOutIndex<()>>,
-    spend_scenarios: HashMap<sha256::Hash, SpendScenario>,
+    scenarios: HashMap<sha256::Hash, Scenario>,
 }
 
 impl Wally {
     pub fn new(phrase: &str) -> tide::Result<Self> {
-        use bdk_chain::bitcoin::hashes::Hash;
         let phrase_hash = sha256::Hash::hash(phrase.as_bytes());
         let sk = PrivateKey {
             compressed: true,
@@ -86,7 +93,7 @@ impl Wally {
             descriptor,
             keymap,
             indexed_tx_graph,
-            spend_scenarios: Default::default(),
+            scenarios: Default::default(),
         })
     }
 
@@ -118,6 +125,14 @@ impl Wally {
                 }),
             })
             .collect()
+    }
+
+    pub fn new_spend_scenario(&mut self, scenario: Scenario) -> tide::Result<sha256::Hash> {
+        // [todo] check scenario!
+
+        let id = scenario.id();
+        self.scenarios.insert(id, scenario);
+        Ok(id)
     }
 }
 
