@@ -1,15 +1,20 @@
-import React from "react";
+const SELECT_VALUE_MUST = "Must Select";
+const SELECT_VALUE_CAN = "Can Select";
+const SELECT_VALUE_DONT = "Don't Select";
 
-const SelectionDropdown = () => {
+const SelectionDropdown = ({ onGlobalSelect, selected }) => {
   return (
-    <select className="select select-bordered rounded-none main_background rounded-none whitespace-nowrap border border-black">
-      <option disabled selected>
-        select
+    <select
+      className="select select-bordered rounded-none main_background rounded-none whitespace-nowrap border border-black"
+      onChange={onGlobalSelect}
+    >
+      <option disabled selected={selected === undefined}>
+        please select
       </option>
-      <option>Must Select</option>
-      <option>Can Select</option>
+      <option selected={selected === SELECT_VALUE_MUST}>Must Select</option>
+      <option selected={selected === SELECT_VALUE_CAN}>Can Select</option>
       {/* eslint-disable-next-line react/no-unescaped-entities */}
-      <option>Don't Select</option>
+      <option selected={selected === SELECT_VALUE_DONT}>Don't Select</option>
     </select>
   );
 };
