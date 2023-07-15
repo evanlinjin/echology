@@ -24,9 +24,9 @@ const CoinControl = () => {
   }, []);
 
   useEffect(() => {
-    const filteredCoins = myCoins.filter(
-      (coin) => coin.must_select !== undefined,
-    );
+    const filteredCoins = myCoins
+      .filter((coin) => coin.must_select !== undefined)
+      .filter((coin) => coin.must_select !== null);
     setSelectedCoins(filteredCoins);
   }, [myCoins]);
 
