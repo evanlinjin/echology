@@ -1,27 +1,27 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import Cookies from "js-cookie";
 import TableHead from "@components/TableHead";
 import TableRow from "@app/coin-control/components/TableRow";
 import Link from "next/link";
-import { GET } from "@utils/request";
 
 const TABLE_HEAD_VALUE_OUTPOINTS = "OutPoints";
 const TABLE_HEAD_VALUE_CONFIRMATION = "Confirmation";
 const TABLE_HEAD_VALUE_SPENT_BY = "Spent By";
 const TABLE_HEAD_VALUE_AMOUNT = "Amount";
-const Table = ({ globalSelect }) => {
-  const [txData, setTxData] = useState([]);
-  const alias = Cookies.get("alias");
+const Table = ({ selectAllAs, coins, setCoins, selectedCoins }) => {
+  const [totalAmount, setTotalAmount] = useState(0);
+  console.log("selectedCoins", selectedCoins);
 
   useEffect(() => {
-    GET(`${process.env.SERVER_HOST}/wallet/${alias}/coins`).then((result) => {
-      const data = Object.entries(result).map(([key, value]) => {
-        return value;
-      });
-      setTxData(data[0]);
-    });
-  }, []);
+    if (selectedCoins.length === 0) {
+      setTotalAmount(0);
+    }
+    const total = selectedCoins.reduce(function (acc, obj) {
+      return acc + obj.amount;
+    }, 0);
+
+    setTotalAmount(total);
+  }, [selectedCoins, coins]);
   const generateDesc = (label) => {
     if (label === TABLE_HEAD_VALUE_SPENT_BY) {
       return "txid / confirmations";
@@ -50,12 +50,15 @@ const Table = ({ globalSelect }) => {
           </tr>
         </thead>
         <tbody>
-          {Object.entries(txData).map((data, index) => (
+          {coins.map((coin, index) => (
             <TableRow
               key={index}
-              data={data}
+              coin={coin}
               index={index}
-              globalSelect={globalSelect}
+              globalSelect={selectAllAs}
+              // setSelectedCoins={setSelectedCoins}
+              setCoins={setCoins}
+              coins={coins}
             />
           ))}
         </tbody>
@@ -63,7 +66,7 @@ const Table = ({ globalSelect }) => {
       <div className="w-full flex justify-end pt-12">
         <div className="flex gap-4 items-center">
           <span className="font-medium whitespace-nowrap">
-            5 txos selected, totally 2600 sats
+            {selectedCoins.length} txos selected, totally {totalAmount} sats
           </span>
           <Link href="/spent-scenario" className="w-full">
             <button className="main_button">next create tx &gt; </button>
