@@ -3,7 +3,7 @@ import { useCallback, useState } from "react";
 import { RiCloseFill } from "react-icons/ri";
 import TableHead from "@components/TableHead";
 
-const RecipientsTable = ({ recipients, onSetRecipients }) => {
+const RecipientsTable = ({ recipients, onSetRecipients, isDone }) => {
   const [recipient, setRecipient] = useState({
     address: "",
     amount: 0,
@@ -17,26 +17,37 @@ const RecipientsTable = ({ recipients, onSetRecipients }) => {
   // TODO: CHANGE ADDRESS
   const handleChangeRecipientAddress = useCallback(
     (e) => {
-      const pattern = new RegExp("[^a-z0-9]+", "g");
       const targetIndex = e.target.id;
-      setRecipient({ ...recipient, address: e.target.value });
+      const updatedRecipient = {
+        address: e.target.value,
+        amount: recipient.amount,
+      };
+      setRecipient(updatedRecipient);
+      const res = recipients.map(
+        (obj) =>
+          [updatedRecipient].find((o) => o.address === obj.address) || obj,
+      );
+      onSetRecipients(res);
     },
-    [recipient],
+    [recipient, recipients],
   );
 
-  //TODO: CHANGE AMOUNT
   const handleChangeRecipientAmount = useCallback(
     (e) => {
+      console.log("click");
       const targetIndex = e.target.id;
-      const updatedAmount = e.target.value;
-      const target = recipient[targetIndex];
-      const recipientsCopy = recipient.slice(e.target.id, 1, {
-        ...target,
-        amount: updatedAmount,
-      });
-      setRecipient({ ...recipient, amount: e.target.value });
+      const updatedRecipient = {
+        address: recipient.address,
+        amount: e.target.value,
+      };
+      setRecipient(updatedRecipient);
+      const res = recipients.map(
+        (obj) =>
+          [updatedRecipient].find((o) => o.address === obj.address) || obj,
+      );
+      onSetRecipients(res);
     },
-    [recipient],
+    [recipient, recipients],
   );
   return (
     <div className="w-2/3">
@@ -56,27 +67,28 @@ const RecipientsTable = ({ recipients, onSetRecipients }) => {
               <td>
                 <input
                   key={`address-${index}`}
-                  id={index}
                   value={recipient.address}
                   type="text"
                   className="input_field"
                   onChange={handleChangeRecipientAddress}
+                  disabled={isDone === true}
                 />
               </td>
               <td>
                 <input
                   key={`amount-${index}`}
-                  id={index}
                   value={recipient.amount}
                   type="number"
                   className="input_field"
                   onChange={handleChangeRecipientAmount}
+                  disabled={isDone === true}
                 />
               </td>
               <td>
                 <button
+                  disabled={isDone === true}
                   onClick={handleDeleteRecipient}
-                  className="flex items-center justify-center hover:bg-gray-500 rounded-full hover:text-white"
+                  className="flex items-center justify-center hover:bg-gray-500 rounded-full hover:text-white disabled:text-gray-400 disabled:bg-gray-200 disabled:cursor-not-allowed"
                 >
                   <RiCloseFill id={index} />
                 </button>
