@@ -19,16 +19,18 @@ mod wally;
 
 #[async_std::main]
 async fn main() -> tide::Result<()> {
-    let env_bitcoind = std::env::var("ECHO_BITCOIND")?;
+    let bitcoind_exe = match std::env::var_os("ECHO_BITCOIND") {
+        Some(bitcoid_path) => bitcoind::BitcoinD::new(bitcoid_path)?,
+        None => bitcoind::BitcoinD::from_downloaded()?,
+    };
     let env_blocktime = std::env::var("ECHO_BLOCKTIME")?.parse::<u64>()?;
     let env_bind = std::env::var("ECHO_BIND")?;
     let env_tls_cert = std::env::var_os("ECHO_TLS_CERT");
     let env_tls_key = std::env::var_os("ECHO_TLS_KEY");
     let env_static = std::env::var_os("ECHO_STATIC");
-    let env_static_index = std::env::var_os("ECHO_STATIC_INDEX").unwrap_or("index.html".into());
+    // let env_static_index = std::env::var_os("ECHO_STATIC_INDEX").unwrap_or("index.html".into());
 
-    let (state, join_handles) =
-        Echology::new(bitcoind::BitcoinD::new(env_bitcoind)?, env_blocktime)?;
+    let (state, join_handles) = Echology::new(bitcoind_exe, env_blocktime)?;
 
     let mut app = tide::with_state(state);
 
@@ -54,12 +56,11 @@ async fn main() -> tide::Result<()> {
         .post(wallet_new_solution);
 
     if let Some(dir) = env_static {
-        let index_path = {
-            let mut path = std::path::PathBuf::from(dir.clone());
-            path.push(env_static_index);
-            path
-        };
-        app.at("/").serve_file(index_path)?;
+        app.at("/").serve_file(
+            [dir.to_str().unwrap(), "index.html"]
+                .into_iter()
+                .collect::<PathBuf>(),
+        )?;
         app.at("coin-con").serve_file(
             [dir.to_str().unwrap(), "coin-control.html"]
                 .into_iter()
