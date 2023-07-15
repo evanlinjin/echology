@@ -1,6 +1,7 @@
 import "@styles/global.css";
 
-import {IBM_Plex_Mono, Rubik_Mono_One} from "next/font/google";
+import { IBM_Plex_Mono, Rubik_Mono_One } from "next/font/google";
+import CoinProvider from "@context/coins/coinContext";
 
 const ibmPlexMono = IBM_Plex_Mono({
   subsets: ["latin"],
@@ -28,7 +29,9 @@ export default function RootLayout({ children }) {
       className={`${ibmPlexMono.className} ${rubikMonoOne.variable} tracking-[1px]`}
     >
       <body>
+        <CoinProvider>
           <main className="app">{children}</main>
+        </CoinProvider>
       </body>
     </html>
   );
