@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { GET } from "@utils/request";
+import { API_ROOT, GET } from "@utils/request";
 import { RiBitCoinLine } from "react-icons/ri";
 import Cookies from "js-cookie";
 import { SlRefresh } from "react-icons/sl";
@@ -13,7 +13,7 @@ const Nav = () => {
   const [headerInfo, setHeaderInfo] = useState(undefined);
 
   useEffect(() => {
-    GET(`${process.env.SERVER_HOST}/network/stats`).then((result) => {
+    GET(`${API_ROOT}/network/stats`).then((result) => {
       const data = Object.entries(result).map(([key, value]) => {
         const newKey = key.replaceAll("_", " ");
         return [`${newKey}`, value];
@@ -26,7 +26,7 @@ const Nav = () => {
     const amount = Math.round(Math.random() * (4200000 - 42000) + 42000);
     const address = Cookies.get("address");
     GET(
-      `${process.env.SERVER_HOST}/faucet?address=${address}&amount=${amount}`,
+      `${API_ROOT}/faucet?address=${address}&amount=${amount}`,
     ).then((r) => setTimeout(window.location.reload(), 3000));
   }, []);
 
