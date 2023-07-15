@@ -21,14 +21,16 @@ mod wally;
 async fn main() -> tide::Result<()> {
     let bitcoind_exe = match std::env::var_os("ECHO_BITCOIND") {
         Some(bitcoid_path) => bitcoind::BitcoinD::new(bitcoid_path)?,
+        #[cfg(feature = "internal_bitcoind")]
         None => bitcoind::BitcoinD::from_downloaded()?,
+        #[cfg(not(feature = "internal_bitcoind"))]
+        None => panic!("please provide ECHO_BITCOIND"),
     };
     let env_blocktime = std::env::var("ECHO_BLOCKTIME")?.parse::<u64>()?;
     let env_bind = std::env::var("ECHO_BIND")?;
     let env_tls_cert = std::env::var_os("ECHO_TLS_CERT");
     let env_tls_key = std::env::var_os("ECHO_TLS_KEY");
     let env_static = std::env::var_os("ECHO_STATIC");
-    // let env_static_index = std::env::var_os("ECHO_STATIC_INDEX").unwrap_or("index.html".into());
 
     let (state, join_handles) = Echology::new(bitcoind_exe, env_blocktime)?;
 

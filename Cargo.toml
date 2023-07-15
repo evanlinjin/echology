@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bitcoind = { version = "^0.29", features = ["23_0"] } # 23_0
+bitcoind = { version = "^0.29" } # 23_0
 miniscript = { version = "^9.0" }
 tide = "0.16.0"
 async-std = { version = "1.8.0", features = ["attributes"] }
@@ -16,3 +16,6 @@ bdk_bitcoind_rpc = { git = "https://github.com/evanlinjin/bdk.git", rev = "4f327
 bdk_coin_select = { git = "https://github.com/evanlinjin/bdk.git", rev = "4f327134815cd52789cf13a595927e1eaf1cbfc0" }
 bdk_tmp_plan = { git = "https://github.com/evanlinjin/bdk.git", rev = "4f327134815cd52789cf13a595927e1eaf1cbfc0" }
 tide-rustls = "0.3.0"
+
+[features]
+internal_bitcoind = ["bitcoind/23_0"]
