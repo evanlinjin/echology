@@ -176,7 +176,6 @@ const SpentScenario = () => {
           <RiAddFill className="hover:text-h5" />
         </button>
         <dialog id="my_modal_5" className="modal">
-          ©
           <form
             method="dialog"
             className="modal-box rounded-none frame_padding border border-gray-700"
