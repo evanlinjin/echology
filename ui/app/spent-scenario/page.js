@@ -6,7 +6,7 @@ import Cookies from "js-cookie";
 import CheckboxField from "@components/CheckboxField";
 import SolutionTable from "@components/SolutionTable";
 import NewSolutionForm from "@components/NewSolutionForm";
-import { POST } from "@utils/request";
+import { API_ROOT, POST } from "@utils/request";
 import { setCookie } from "@app/page";
 
 const SpentScenario = () => {
@@ -31,7 +31,12 @@ const SpentScenario = () => {
   const [excessStrategy, setExcessStrategy] = useState("best_strategy");
   const [candidateOrder, setCandidateOrder] = useState("largest_first");
   const [isDone, setIsDone] = useState(undefined);
-  let selectedCoins = JSON.parse(Cookies.get("selectedCoins"));
+  let selectedCoins;
+  if (typeof Cookies.get("selectedCoins") !== 'undefined') {
+    selectedCoins = JSON.parse(Cookies.get("selectedCoins"));
+  } else {
+    selectedCoins = JSON.parse("[]");
+  }
   let totalAmount = Cookies.get("totalAmount");
   let alias = Cookies.get("alias");
 
@@ -42,13 +47,14 @@ const SpentScenario = () => {
   const handlePostNewSpent = useCallback(() => {
     const body = {
       candidates: [...selectedCoins],
+      candidates: [],
       recipients: [...recipients],
       max_extra_target: coinSelectionParameters.maxExtraTarget,
       fee_rate: coinSelectionParameters.freeRate,
       long_term_fee_rate: coinSelectionParameters.longTermFreeRate,
     };
     POST(
-      `${process.env.SERVER_HOST}/wallet/${alias}/new_spend_scenario`,
+      `${API_ROOT}/wallet/${alias}/new_spend_scenario`,
       body,
     ).then((r) => {
       setCookie("spentScenarioId", r.spend_scenario_id);
@@ -89,7 +95,7 @@ const SpentScenario = () => {
       parameters: parameters,
       excess_strategy: excessStrategy,
     };
-    POST(`${process.env.SERVER_HOST}/wallet/${alias}/new_solution`, body).then(
+    POST(`${API_ROOT}/wallet/${alias}/new_solution`, body).then(
       (result) => console.log("result", result),
     );
   }, []);

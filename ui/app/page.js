@@ -4,7 +4,7 @@ import "../styles/global.css";
 import Link from "next/link";
 import { useState } from "react";
 import Cookies from "js-cookie";
-import { GET } from "@utils/request";
+import { API_ROOT, GET } from "@utils/request";
 
 export function setCookie(name, value, expires) {
   if (expires) {
@@ -27,7 +27,7 @@ const WelcomePage = () => {
       window.my_modal_4.showModal();
     }
     setCookie("alias", alias);
-    GET(`${process.env.SERVER_HOST}/wallet/${alias}/address`).then((result) =>
+    GET(`${API_ROOT}/wallet/${alias}/address`).then((result) =>
       setCookie("address", result.address),
     );
   };

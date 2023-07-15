@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SelectionDropdown from "@components/SelectionDropdown";
 import Table from "@app/coin-control/components/Table";
-import { GET } from "@utils/request";
+import { API_ROOT, GET } from "@utils/request";
 import { convertSelectedValue } from "@app/coin-control/components/converter";
 import Cookies from "js-cookie";
 import Link from "next/link";
@@ -17,7 +17,7 @@ const CoinControl = () => {
   const alias = Cookies.get("alias");
 
   useEffect(() => {
-    GET(`${process.env.SERVER_HOST}/wallet/${alias}/coins`).then((result) => {
+    GET(`${API_ROOT}/wallet/${alias}/coins`).then((result) => {
       const data = result.coins;
       const coinsWithSelection = data.map((coin) => {
         return { ...coin, must_select: undefined };
