@@ -1,6 +1,7 @@
 "use client";
 import { useCallback } from "react";
 import { RiCloseFill } from "react-icons/ri";
+import TableHead from "@components/TableHead";
 
 const Table = ({ recipients, onSetRecipients }) => {
   const handleDeleteRecipient = useCallback((e) => {
@@ -9,13 +10,13 @@ const Table = ({ recipients, onSetRecipients }) => {
   }, []);
   return (
     <div className="overflow-x-auto">
-      <table className="table">
+      <table className="main_table">
         {/* head */}
         <thead>
           <tr>
             <th></th>
-            <th>Address:</th>
-            <th>Amount:</th>
+            <TableHead label="Address:" />
+            <TableHead label="Amount:" />
             <th></th>
           </tr>
         </thead>

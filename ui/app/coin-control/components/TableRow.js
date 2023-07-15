@@ -1,35 +1,56 @@
 import SelectionDropdown from "@components/SelectionDropdown";
+import { useCallback } from "react";
+import { convertSelectedValue } from "@app/coin-control/components/converter";
 
-const TableRow = ({ data, index, globalSelect }) => {
-  if (!data) {
+const TableRow = ({ coin, index, setCoins, coins }) => {
+  if (!coin) {
     return null;
   }
-  const { outpoint, amount, confirmations, spent_by } = data[1];
+  console.log("coin", coin);
+  const { outpoint, amount, confirmations, spent_by, must_select } = coin;
 
+  const handleChangeSelect = useCallback(
+    (e) => {
+      const selectedValue = convertSelectedValue(e.target.value);
+
+      const updatedCoins = coins.map((eachCoin) => {
+        if (eachCoin.outpoint !== outpoint) {
+          return eachCoin;
+        } else {
+          return { ...eachCoin, must_select: selectedValue };
+        }
+      });
+      setCoins([...updatedCoins]);
+    },
+    [coins],
+  );
   const idFormatter = (id) => {
     if (!id) {
       return "";
     }
-    return `${id.substring(0, 5)}...${id.substring(id.length - 5)}`;
+    return `${id.substring(0, 10)}.....${id.substring(id.length - 10)}`;
   };
 
   const formattedOutPoint = idFormatter(outpoint);
   const formattedTxid = spent_by && idFormatter(spent_by.txid);
   return (
     <tr className="hover">
-      <th>{index + 1}</th>
-      <th>
-        <SelectionDropdown selected={globalSelect} />
-      </th>
-      <td>{formattedOutPoint}</td>
-      <td>{amount}</td>
-      <td>{confirmations}</td>
+      <td>{index + 1}</td>
+      <td>
+        <SelectionDropdown
+          selected={must_select}
+          onChange={handleChangeSelect}
+        />
+      </td>
+      <td className="input_field">{formattedOutPoint}</td>
+      <td className="input_field">{amount}</td>
+      <td className="input_field">{confirmations}</td>
       {spent_by ? (
-        <td>
+        <td className="input_field">
           {formattedTxid} / {spent_by.confirmations}
         </td>
       ) : (
-        <td>/</td>
+        <td className="input_field text-center">/</td>
       )}
     </tr>
   );
