@@ -9,7 +9,7 @@ import NewSolutionForm from "@app/components/NewSolutionForm";
 import { POST } from "@utils/request";
 import { setCookie } from "@app/page";
 
-const Page = () => {
+const SpentScenario = () => {
   const [recipients, setRecipients] = useState([
     {
       address:
@@ -188,4 +188,4 @@ const Page = () => {
     </div>
   );
 };
-export default Page;
+export default SpentScenario;
