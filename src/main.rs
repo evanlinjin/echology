@@ -5,22 +5,21 @@ use async_std::sync::RwLock;
 
 use async_std::task::JoinHandle;
 use bdk_bitcoind_rpc::bitcoincore_rpc::jsonrpc::serde_json::Value;
-use bdk_chain::bitcoin::hashes::Hash;
+use bdk_bitcoind_rpc::bitcoincore_rpc::RawTx;
 use bdk_chain::bitcoin::Address;
 use bdk_chain::bitcoin::Amount;
-use bdk_chain::bitcoin::Txid;
 use bdk_chain::local_chain::LocalChain;
+use bitcoind::anyhow::anyhow;
 use bitcoind::bitcoincore_rpc::RpcApi;
-use solicitation::Metrics;
-use solicitation::SolutionRequest;
-use solicitation::SolutionResponse;
 use tide::prelude::*;
 use tide::Request;
 use tide::Response;
+use tide::StatusCode;
+use wally::CsSolutionRequest;
+use wally::CsSolutionResponse;
 use wally::Scenario;
 use wally::Wally;
 
-mod solicitation;
 mod wally;
 
 const BLOCK_TIME_SECONDS: u64 = 30;
@@ -167,6 +166,11 @@ async fn main() -> tide::Result<()> {
     let mut app = tide::with_state(state);
     app.with(tide::utils::After(|mut resp: Response| async move {
         resp.append_header("Access-Control-Allow-Origin", "*");
+        if let Some(err) = resp.error() {
+            resp.set_body(json!({
+                "error": err.to_string(),
+            }));
+        }
         Ok(resp)
     }));
     app.at("/network/stats").get(network_stats);
@@ -264,25 +268,60 @@ async fn wallet_new_spend_scenario(mut req: Request<Echology>) -> tide::Result {
 }
 
 async fn wallet_new_solution(mut req: Request<Echology>) -> tide::Result {
-    let solution_req: SolutionRequest = req.body_json().await?;
+    let solution_req: CsSolutionRequest = req.body_json().await?;
     let alias = req.param("alias")?;
 
-    let _wallet = req.state().get_or_create_wallet(alias).await?;
+    match solution_req.algorithm {
+        wally::CsAlgorithm::Bnb { bnb_rounds, .. } => {
+            if bnb_rounds > 50_000 {
+                return Err(tide::Error::new(
+                    StatusCode::BadRequest,
+                    anyhow!(
+                        "are you trying to screw us over with so many bnb rounds? 50k is the max"
+                    ),
+                ));
+            }
+        }
+        _ => {}
+    }
+
+    let wallet = req.state().get_or_create_wallet(alias).await?;
+    let (tx, metrics) = {
+        let wallet_read_lock = wallet.read().await;
+        let scenario = wallet_read_lock
+            .get_spend_scenario(solution_req.spend_scenario_id)
+            .ok_or(tide::Error::new(
+                StatusCode::BadRequest,
+                anyhow!("no such spend scenario"),
+            ))?;
+        let chain = req.state().chain.read().await;
+        let descriptor = &wallet_read_lock.descriptor;
+        let keymap = &wallet_read_lock.keymap;
+        let graph = wallet_read_lock.indexed_tx_graph.graph();
+        let algorithm = solution_req.algorithm;
+        let excess_strategy = solution_req.excess_strategy;
+        wally::create_spend_solution(
+            &chain,
+            descriptor,
+            keymap,
+            graph,
+            &scenario,
+            algorithm,
+            excess_strategy,
+        )?
+    };
+
     let epoch = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .expect("must get time")
         .as_secs();
 
-    Ok(json!(SolutionResponse {
+    Ok(json!(CsSolutionResponse {
         request: solution_req,
         timestamp: epoch,
-        txid: Txid::all_zeros(),
-        raw_tx: "01000000010470c3139dc0f0882f98d75ae5bf957e68dadd32c5f81261c0b13e85f592ff7b0000000000ffffffff02b286a61e000000001976a9140f39a0043cf7bdbe429c17e8b514599e9ec53dea88ac01000000000000001976a9148a8c9fd79173f90cf76410615d2a52d12d27d21288ac00000000".to_string(),
-        metrics: Metrics {
-            waste: 0.0,
-            feerate_deviation: 0.0,
-            target_deviation: 0,
-            tx_size: 0,
-        }
-    }).into())
+        txid: tx.txid(),
+        raw_tx: tx.raw_hex(),
+        metrics,
+    })
+    .into())
 }

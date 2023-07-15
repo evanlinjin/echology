@@ -13,3 +13,4 @@ serde = { version = "1.0", features = ["derive"] }
 bdk_chain = { git = "https://github.com/evanlinjin/bdk.git", rev = "4f327134815cd52789cf13a595927e1eaf1cbfc0" }
 bdk_bitcoind_rpc = { git = "https://github.com/evanlinjin/bdk.git", rev = "4f327134815cd52789cf13a595927e1eaf1cbfc0" }
 bdk_coin_select = { git = "https://github.com/evanlinjin/bdk.git", rev = "4f327134815cd52789cf13a595927e1eaf1cbfc0" }
+bdk_tmp_plan = { git = "https://github.com/evanlinjin/bdk.git", rev = "4f327134815cd52789cf13a595927e1eaf1cbfc0" }
