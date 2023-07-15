@@ -22,11 +22,14 @@ async fn main() -> tide::Result<()> {
     let env_bind = std::env::var("ECHO_BIND")?;
     let env_tls_cert = std::env::var_os("ECHO_TLS_CERT");
     let env_tls_key = std::env::var_os("ECHO_TLS_KEY");
+    let env_static = std::env::var_os("ECHO_STATIC");
+    let env_static_index = std::env::var_os("ECHO_STATIC_INDEX").unwrap_or("index.html".into());
 
     let (state, join_handles) =
         Echology::new(bitcoind::BitcoinD::new(env_bitcoind)?, env_blocktime)?;
 
     let mut app = tide::with_state(state);
+
     app.with(tide::utils::After(|mut resp: Response| async move {
         resp.append_header("Access-Control-Allow-Origin", "*");
         if let Some(err) = resp.error() {
@@ -36,6 +39,7 @@ async fn main() -> tide::Result<()> {
         }
         Ok(resp)
     }));
+
     app.at("/network/stats").get(network_stats);
     app.at("/network/broadcast").post(network_broadcast);
     app.at("/decode").get(decode);
@@ -46,6 +50,16 @@ async fn main() -> tide::Result<()> {
         .post(wallet_new_spend_scenario);
     app.at("/wallet/:alias/new_solution")
         .post(wallet_new_solution);
+
+    if let Some(dir) = env_static {
+        let index_path = {
+            let mut path = std::path::PathBuf::from(dir.clone());
+            path.push(env_static_index);
+            path
+        };
+        app.at("/").serve_file(index_path)?;
+        app.at("/").serve_dir(dir)?;
+    }
 
     match (env_tls_cert, env_tls_key) {
         (Some(tls_cert), Some(tls_key)) => {
