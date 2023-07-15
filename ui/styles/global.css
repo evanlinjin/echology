@@ -78,6 +78,7 @@
 .main_button {
     @apply main_background rounded-none py-2.5 px-2.5  border border-black whitespace-nowrap h-fit
 }
+
 .icon_button {
     @apply main_background rounded-full h-6 w-6 border border-black whitespace-nowrap flex items-center justify-center hover:bg-gray-400 hover:text-white
 }
@@ -91,12 +92,12 @@
 }
 
 .page_padding {
-    @apply sm:px-6 px-6 py-10
+    /*@apply sm:px-6 px-6 py-10*/
 }
 
 /*// spent scenarios*/
 .section_title {
-    @apply border border-black whitespace-nowrap main_background text-h5 py-2.5 px-2.5
+    @apply border border-black whitespace-nowrap main_background text-body1 py-2.5 px-2.5
 }
 
 .section_desc {
@@ -108,7 +109,23 @@
 }
 
 .app {
-    @apply box-content h-screen relative z-10 grid place-items-center mx-auto border border-gray-700 mx-8 my-8;
+    @apply box-border h-screen relative z-10 grid place-items-center mx-auto  px-8 py-8;
+}
+
+.main_frame {
+    @apply border border-gray-700  h-full w-full
+}
+
+.main_frame_no_padding {
+    @apply border border-gray-700 h-full w-full
+}
+
+.frame_padding {
+    @apply px-6 py-6
+}
+
+.input_field {
+    @apply text-body2 bg-gray-200 py-2.5 px-2.5 w-full focus-visible:border-none
 }
 
 .desc {
@@ -121,6 +138,10 @@
 
 .prompt_layout {
     @apply space-y-6 py-8 sm:columns-2 sm:gap-6 xl:columns-3;
+}
+
+.main_table {
+    @apply w-full table-auto border-separate border-spacing-2
 }
 
 /*.dropdown {*/
