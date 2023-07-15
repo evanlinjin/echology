@@ -60,7 +60,7 @@ Response Body:
 }
 ```
 
-### GET `/wallets/{alias}/address`
+### GET `/wallet/{alias}/address`
 
 Response Body:
 ```json
@@ -69,7 +69,7 @@ Response Body:
 }
 ```
 
-### GET `/wallets/{alias}/coins`
+### GET `/wallet/{alias}/coins`
 
 Response Body:
 ```json
@@ -94,7 +94,7 @@ Response Body:
 }
 ```
 
-### POST `/wallets/{alias}/new_spend_scenario`
+### POST `/wallet/{alias}/new_spend_scenario`
 
 Request Body:
 ```json
@@ -125,19 +125,39 @@ Response Body:
 }
 ```
 
-### POST `/wallets/{alias}/new_solution`
+### POST `/wallet/{alias}/new_solution`
 
 Request Body:
 ```json
 {
     "spend_scenario_id": "fa198711cc4cc60cfa9287984ce31514cbbe805d512e1c23d03d39ff284c7154",
-    "algorithm": "bnb",
+    "algorithm": "bnb", // values: "bnb", "select_until_finished"
     // parameters are unique, based on the "algorithm" selected
     "parameters": {
-        "bnb_round": 2000
-    }
+        "bnb_round": 2000,
+        // UI text: Use fallback algorithm?
+        "fallback": false,
+    },
+    "excess_strategy": "best_strategy", // valid values: "best_strategy", "to_fee", "to_recipient", "to_change_output"
 }
 ```
+
+* Parameters for `"algorithm": "bnb"`:
+    ```json
+    {
+        // UI text: Rounds of branch and bound
+        "bnb_round": 2000,
+        // UI text: Use fallback algorithm?
+        "fallback": false,
+    }
+    ```
+* Parameters for `"algorithm": "select_until_finished"`:
+    ```json
+    {
+        // UI text: Selection order
+        "candidate_order": "largest_first" // values: "largest_first" (default), "smallest_first", "oldest_first", "newest_first"
+    }
+    ```
 
 Response Body:
 ```json
@@ -159,8 +179,8 @@ Response Body:
     "metrics": {
         "waste": 5.0,
         "feerate_deviation": 0.1,
-        "target_deviation": 200,
         "tx_size": 100,
+        "used_excess_strategy": "best_strategy", // valid values: "best_strategy", "to_fee", "to_recipient", "to_change_output"
     }
 }
 ```
