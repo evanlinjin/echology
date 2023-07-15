@@ -1,7 +1,7 @@
 "use client";
 import { useCallback } from "react";
 import { RiCloseFill } from "react-icons/ri";
-import TableHead from "@components/TableHead";
+import TableHead from "../../../components/TableHead";
 
 const Table = ({ recipients, onSetRecipients }) => {
   const handleDeleteRecipient = useCallback((e) => {

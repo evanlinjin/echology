@@ -1,11 +1,11 @@
 "use client";
 import { useCallback, useState } from "react";
-import RecipientsTable from "@app/components/RecipientsTable";
+import RecipientsTable from "@components/RecipientsTable";
 import { RiAddFill } from "react-icons/ri";
 import Cookies from "js-cookie";
-import CheckboxField from "@app/components/CheckboxField";
-import SolutionTable from "@app/components/SolutionTable";
-import NewSolutionForm from "@app/components/NewSolutionForm";
+import CheckboxField from "@components/CheckboxField";
+import SolutionTable from "@components/SolutionTable";
+import NewSolutionForm from "@components/NewSolutionForm";
 import { POST } from "@utils/request";
 import { setCookie } from "@app/page";
 
@@ -93,6 +93,10 @@ const SpentScenario = () => {
   const handleAddSolutionClick = useCallback(() => {
     window.my_modal_5.showModal();
   }, []);
+
+  if (!selectedCoins || !alias || !totalAmount) {
+    return null;
+  }
 
   return (
     <div className="w-full flex gap-6 flex-col frame_padding">
