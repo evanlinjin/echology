@@ -64,6 +64,7 @@ const NewSolutionForm = ({
     <div className="frame_padding main_frame">
       <span className="whitespace-nowrap">Candidate Order:</span>
       <select
+        defaultValue="largest_first"
         className="select select-bordered rounded-none main_background rounded-none whitespace-nowrap border border-black w-full"
         onChange={handleChangeCandidateOrder}
       >
@@ -88,10 +89,10 @@ const NewSolutionForm = ({
         <div className="flex flex-col gap-2 items-start">
           <span className="whitespace-nowrap">Coin Selection Algorithm:</span>
           <select
+            defaultValue="bnb"
             className="select select-bordered rounded-none main_background rounded-none whitespace-nowrap border border-black w-full"
             onChange={handleChangeAlgorithm}
           >
-            {/*<option disabled>please select</option>*/}
             <option value="bnb" selected={selectionAlgorithm === "bnb"}>
               Branch & Bound
             </option>
@@ -107,6 +108,7 @@ const NewSolutionForm = ({
         <div className="flex flex-col gap-2 items-start">
           <span className="whitespace-nowrap">Excess Strategy:</span>
           <select
+            defaultValue="best_strategy"
             className="select select-bordered rounded-none main_background rounded-none whitespace-nowrap border border-black w-full"
             onChange={handleChangeExcessStrategy}
           >

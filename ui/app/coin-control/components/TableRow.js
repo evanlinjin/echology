@@ -35,7 +35,7 @@ const TableRow = ({ coin, index, setCoins, coins }) => {
   const formattedTxid = spent_by && idFormatter(spent_by.txid);
   return (
     <tr className="hover">
-      <td>{index + 1}</td>
+      <td>{index}</td>
       <td>
         <SelectionDropdown
           selected={must_select}
@@ -43,8 +43,8 @@ const TableRow = ({ coin, index, setCoins, coins }) => {
         />
       </td>
       <td className="input_field">{formattedOutPoint}</td>
-      <td className="input_field">{amount}</td>
-      <td className="input_field">{confirmations}</td>
+      <td className="input_field text-center">{amount}</td>
+      <td className="input_field text-center">{confirmations}</td>
       {spent_by ? (
         <td className="input_field">
           {formattedTxid} / {spent_by.confirmations}

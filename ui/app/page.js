@@ -27,7 +27,7 @@ const WelcomePage = () => {
       window.my_modal_4.showModal();
     }
     setCookie("alias", alias);
-    GET(`${API_ROOT}/wallet/${alias}/address`).then((result) =>
+    GET(`http://localhost:8080/api/wallet/${alias}/address`).then((result) =>
       setCookie("address", result.address),
     );
   };

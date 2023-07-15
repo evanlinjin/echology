@@ -36,6 +36,9 @@
     @apply py-2.5 px-2.5
 }
 
+.section_title_cap {
+    @apply border-black whitespace-nowrap main_background text-body1 py-2.5 px-2.5 border-l border-r border-t
+}
 
 /*// spent scenarios*/
 .section_title {
