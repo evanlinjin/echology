@@ -17,7 +17,7 @@ const CoinControl = () => {
   const alias = Cookies.get("alias");
 
   useEffect(() => {
-    GET(`${API_ROOT}/wallet/${alias}/coins`).then((result) => {
+    GET(`http://localhost:8080/api/wallet/${alias}/coins`).then((result) => {
       const data = result.coins;
       const coinsWithSelection = data.map((coin) => {
         return { ...coin, must_select: undefined };

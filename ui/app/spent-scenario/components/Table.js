@@ -25,7 +25,7 @@ const Table = ({ recipients, onSetRecipients }) => {
         <tbody>
           {recipients.map((recipient, index) => (
             <tr className="hover" key={`recipient-${index}`}>
-              <th>{index + 1}</th>
+              <th>{index}</th>
               <td>Hart Hagerty</td>
               <td>Desktop Support Technician</td>
               <td>

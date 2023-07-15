@@ -9,7 +9,7 @@ const Nav = () => {
   const [headerInfo, setHeaderInfo] = useState(undefined);
 
   useEffect(() => {
-    GET(`${API_ROOT}/network/stats`).then((result) => {
+    GET(`http://localhost:8080/api/network/stats`).then((result) => {
       const data = Object.entries(result).map(([key, value]) => {
         const newKey = key.replaceAll("_", " ");
         return [`${newKey}`, value];
@@ -22,7 +22,7 @@ const Nav = () => {
     const amount = Math.round(Math.random() * (4200000 - 42000) + 42000);
     const address = Cookies.get("address");
     GET(
-      `${API_ROOT}/faucet?address=${address}&amount=${amount}`,
+      `http://localhost:8080/api/faucet?address=${address}&amount=${amount}`,
     ).then((r) => setTimeout(window.location.reload(), 3000));
   }, []);
 
