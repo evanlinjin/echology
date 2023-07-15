@@ -1,6 +1,14 @@
 import React, { useCallback } from "react";
 
-const CheckboxField = ({ label, unit, checked, disabled, onChange, value }) => {
+const CheckboxField = ({
+  label,
+  unit,
+  checked,
+  disableCheckbox,
+  disableInput,
+  onChange,
+  value,
+}) => {
   const handleChange = useCallback((e) => {
     onChange(e);
   }, []);
@@ -11,7 +19,7 @@ const CheckboxField = ({ label, unit, checked, disabled, onChange, value }) => {
           type="checkbox"
           checked={checked}
           className="checkbox checkbox-sm rounded-none"
-          disabled={disabled}
+          disabled={disableCheckbox}
         />
         <span className="label-text whitespace-nowrap">{label}</span>
       </label>
@@ -23,6 +31,7 @@ const CheckboxField = ({ label, unit, checked, disabled, onChange, value }) => {
           onChange={handleChange}
           pattern="[0-9]"
           value={value}
+          disabled={disableInput}
         />
         <span className="whitespace-nowrap">{unit}</span>
       </div>

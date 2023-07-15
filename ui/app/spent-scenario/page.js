@@ -30,6 +30,7 @@ const SpentScenario = () => {
   });
   const [excessStrategy, setExcessStrategy] = useState("best_strategy");
   const [candidateOrder, setCandidateOrder] = useState("largest_first");
+  const [isDone, setIsDone] = useState(undefined);
   let selectedCoins = JSON.parse(Cookies.get("selectedCoins"));
   let totalAmount = Cookies.get("totalAmount");
   let alias = Cookies.get("alias");
@@ -49,7 +50,10 @@ const SpentScenario = () => {
     POST(
       `${process.env.SERVER_HOST}/wallet/${alias}/new_spend_scenario`,
       body,
-    ).then((r) => setCookie("spentScenarioId", r.spend_scenario_id));
+    ).then((r) => {
+      setCookie("spentScenarioId", r.spend_scenario_id);
+      setIsDone(true);
+    });
   }, []);
 
   const handleChangeFreeRateParameters = useCallback((e) => {
@@ -111,8 +115,12 @@ const SpentScenario = () => {
         <div className="flex-col main_frame frame_padding flex w-full items-start gap-6">
           <div className="flex gap-4 items-start ">
             <span>Recipient:</span>
-            <button className="icon_button" onClick={addRecipientsClick}>
-              <RiAddFill className="hover:text-h5" />
+            <button
+              className="icon_button disabled:text-gray-400 disabled:bg-gray-200 disabled:cursor-not-allowed disabled:border-gray-500"
+              onClick={addRecipientsClick}
+              disabled={isDone === true}
+            >
+              <RiAddFill className="text-body1 hover:text-h5 disabled:text-body1" />
             </button>
           </div>
 
@@ -121,13 +129,15 @@ const SpentScenario = () => {
               <RecipientsTable
                 recipients={recipients}
                 onSetRecipients={setRecipients}
+                isDone={isDone}
               />
               <div className="flex flex-col gap-4 w-1/3">
                 <CheckboxField
                   label="Max Extra Target:"
                   unit="sats"
                   checked
-                  disabled
+                  disableCheckbox
+                  disableInput={isDone}
                   onChange={handleChangeMaxExtraParameters}
                   value={coinSelectionParameters.maxExtraTarget}
                 />
@@ -135,7 +145,8 @@ const SpentScenario = () => {
                   label="Free Rate:"
                   unit="sats / vbytes"
                   checked
-                  disabled
+                  disableCheckbox
+                  disableInput={isDone}
                   onChange={handleChangeFreeRateParameters}
                   value={coinSelectionParameters.freeRate}
                 />
@@ -144,6 +155,7 @@ const SpentScenario = () => {
                   unit="sats / vbytes"
                   onChange={handleChangeLongTermFreeRateParameters}
                   value={coinSelectionParameters.longTermFreeRate}
+                  disableInput={isDone}
                 />
               </div>
             </div>
@@ -153,7 +165,7 @@ const SpentScenario = () => {
               className="btn btn-active main_button"
               onClick={handlePostNewSpent}
             >
-              Done
+              {isDone === true ? "Edit" : "Done"}
             </button>
           </div>
         </div>
@@ -164,6 +176,7 @@ const SpentScenario = () => {
           <RiAddFill className="hover:text-h5" />
         </button>
         <dialog id="my_modal_5" className="modal">
+          ©
           <form
             method="dialog"
             className="modal-box rounded-none frame_padding border border-gray-700"
