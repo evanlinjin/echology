@@ -79,12 +79,20 @@
     @apply main_background rounded-none py-2.5 px-2.5  border border-black whitespace-nowrap h-fit
 }
 
+.black_button {
+    @apply bg-black text-white rounded-none py-2.5 px-2.5  border border-black whitespace-nowrap h-fit
+}
+
 .icon_button {
     @apply main_background rounded-full h-6 w-6 border border-black whitespace-nowrap flex items-center justify-center hover:bg-gray-400 hover:text-white
 }
 
+.nav_button_square {
+    @apply w-24 h-24 rounded-none main_background grid place-items-center
+}
+
 .page_title {
-    @apply w-fit bg-black text-white rounded-none text-h2 py-5 px-2.5
+    @apply w-fit bg-black text-white rounded-none text-h3 py-5 px-2.5
 }
 
 .item_padding {
@@ -105,7 +113,7 @@
 }
 
 .section {
-    @apply flex gap-10 w-full items-start
+    @apply flex gap-10 w-full
 }
 
 .app {
