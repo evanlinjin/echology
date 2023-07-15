@@ -14,7 +14,7 @@ const SpentScenario = () => {
     {
       address:
         "bcrt1p53e6xngdkjkshns8ukz03mc6fkymdcdkl82d8mug4ltujsmkz0zsq7l2sh",
-      amount: 1200,
+      amount: undefined,
     },
   ]);
   const [coinSelectionParameters, setCoinSelectionParameters] = useState({
@@ -93,10 +93,6 @@ const SpentScenario = () => {
   const handleAddSolutionClick = useCallback(() => {
     window.my_modal_5.showModal();
   }, []);
-
-  if (!selectedCoins || !alias || !totalAmount) {
-    return null;
-  }
 
   return (
     <div className="w-full flex gap-6 flex-col frame_padding">

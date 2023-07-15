@@ -10,7 +10,7 @@ const CheckboxField = ({ label, unit, checked, disabled, onChange, value }) => {
         <input
           type="checkbox"
           checked={checked}
-          className="checkbox checkbox-sm border-none"
+          className="checkbox checkbox-sm rounded-none"
           disabled={disabled}
         />
         <span className="label-text whitespace-nowrap">{label}</span>

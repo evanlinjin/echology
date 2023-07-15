@@ -38,7 +38,7 @@ const NewSolutionForm = ({
   }, []);
 
   const bnbParametersFields = (
-    <div className="frame_padding main_frame">
+    <div className="frame_padding main_frame gap-4 flex flex-col">
       <div className="flex gap-3 items-center">
         <input
           type="number"
@@ -48,14 +48,14 @@ const NewSolutionForm = ({
         />
         <span className="whitespace-nowrap">rounds</span>
       </div>
-      <div className="flex gap-3 flex-col items-center">
-        <span className="label-text">use fallback algorithm</span>
+      <div className="flex gap-3 items-center">
         <input
           type="checkbox"
           checked={bnbParameters.fallback}
-          className="checkbox"
+          className="checkbox rounded-none"
           onChange={handleChangeBnbFallback}
         />
+        <span className="label-text">Use Fallback Algorithm</span>
       </div>
     </div>
   );
