@@ -7,5 +7,5 @@ export ECHO_BLOCKTIME=120 # seconds
 export ECHO_BIND="127.0.0.1:8080"
 # export ECHO_TLS_CERT=""
 # export ECHO_TLS_KEY=""
-export ECHO_STATIC="$(pwd)/static"
+export ECHO_STATIC="$(pwd)/ui/out"
 cargo run

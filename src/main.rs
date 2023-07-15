@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use bdk_bitcoind_rpc::bitcoincore_rpc::jsonrpc::serde_json::Value;
 use bdk_bitcoind_rpc::bitcoincore_rpc::RawTx;
 use bdk_chain::bitcoin::Address;
@@ -40,15 +42,15 @@ async fn main() -> tide::Result<()> {
         Ok(resp)
     }));
 
-    app.at("/network/stats").get(network_stats);
-    app.at("/network/broadcast").post(network_broadcast);
-    app.at("/decode").get(decode);
-    app.at("/faucet").get(faucet);
-    app.at("/wallet/:alias/address").get(wallet_address);
-    app.at("/wallet/:alias/coins").get(wallet_coins);
-    app.at("/wallet/:alias/new_spend_scenario")
+    app.at("/api/network/stats").get(network_stats);
+    app.at("/api/network/broadcast").post(network_broadcast);
+    app.at("/api/decode").get(decode);
+    app.at("/api/faucet").get(faucet);
+    app.at("/api/wallet/:alias/address").get(wallet_address);
+    app.at("/api/wallet/:alias/coins").get(wallet_coins);
+    app.at("/api/wallet/:alias/new_spend_scenario")
         .post(wallet_new_spend_scenario);
-    app.at("/wallet/:alias/new_solution")
+    app.at("/api/wallet/:alias/new_solution")
         .post(wallet_new_solution);
 
     if let Some(dir) = env_static {
@@ -58,6 +60,16 @@ async fn main() -> tide::Result<()> {
             path
         };
         app.at("/").serve_file(index_path)?;
+        app.at("coin-con").serve_file(
+            [dir.to_str().unwrap(), "coin-control.html"]
+                .into_iter()
+                .collect::<PathBuf>(),
+        )?;
+        app.at("spent-scen").serve_file(
+            [dir.to_str().unwrap(), "spent-scenario.html"]
+                .into_iter()
+                .collect::<PathBuf>(),
+        )?;
         app.at("/").serve_dir(dir)?;
     }
 
