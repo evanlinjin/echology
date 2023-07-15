@@ -14,7 +14,7 @@ export function setCookie(name, value, expires) {
 }
 
 const WelcomePage = () => {
-  const [alias, setAlias] = useState(null);
+  const [alias, setAlias] = useState("");
 
   const handleChange = (e) => {
     const pattern = new RegExp("[^a-z0-9]+", "g");
@@ -23,7 +23,7 @@ const WelcomePage = () => {
   };
 
   const handleClickEnter = async () => {
-    if (!alias) {
+    if (alias === "") {
       window.my_modal_4.showModal();
     }
     setCookie("alias", alias);
