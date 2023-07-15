@@ -1,9 +1,5 @@
-import React, { useCallback, useEffect } from "react";
-import { POST } from "@utils/request";
-import Cookies from "js-cookie";
+import React from "react";
 import TableHead from "@components/TableHead";
-
-const alias = Cookies.get("alias");
 
 const SolutionTable = () => {
   const titles = [
