@@ -50,9 +50,9 @@ pub struct CoinSpentBy {
 pub struct Scenario {
     pub candidates: Vec<ScenarioCandidate>,
     pub recipients: Vec<ScenarioRecipient>,
-    pub max_extra_target: u64,
     pub fee_rate: f32,                   // sats per wu
     pub long_term_fee_rate: Option<f32>, // sats per wu
+    pub min_absolute_fee: u64,           // sats
 }
 
 impl Scenario {
@@ -341,9 +341,9 @@ pub fn create_spend_solution(
     };
 
     let cs_opts = bdk_coin_select::CoinSelectorOpt {
-        max_extra_target: scenario.max_extra_target,
         target_feerate: scenario.fee_rate / 4.0,
         long_term_feerate: scenario.long_term_fee_rate.map(|r| r / 4.0),
+        min_absolute_fee: scenario.min_absolute_fee,
         min_drain_value: descriptor.dust_value(),
         ..bdk_coin_select::CoinSelectorOpt::fund_outputs(
             &output,
