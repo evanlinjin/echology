@@ -48,11 +48,14 @@ pub struct CoinSpentBy {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Scenario {
+    #[serde(default)]
     pub candidates: Vec<ScenarioCandidate>,
+    #[serde(default)]
     pub recipients: Vec<ScenarioRecipient>,
-    pub fee_rate: f32,                   // sats per wu
+    pub fee_rate: f32, // sats per wu
+    #[serde(default)]
     pub long_term_fee_rate: Option<f32>, // sats per wu
-    pub min_absolute_fee: u64,           // sats
+    pub min_absolute_fee: u64, // sats
 }
 
 impl Scenario {
