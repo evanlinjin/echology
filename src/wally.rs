@@ -471,8 +471,8 @@ pub fn create_spend_solution(
     let metrics = CsMetrics {
         waste: excess_strategy.waste,
         feerate_deviation: {
-            let req_rate = scenario.fee_rate / 4.0;
-            let actual_rate = excess_strategy.feerate() / 4.0;
+            let req_rate = scenario.fee_rate;
+            let actual_rate = excess_strategy.feerate() * 4.0;
             actual_rate - req_rate
         },
         used_excess_strategy: CsExcessStrategy::from_kind(*excess_strategy_kind),
