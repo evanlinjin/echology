@@ -67,7 +67,7 @@ const Nav = () => {
             <div
               className={`hover:cursor-pointer ${
                 showCopied && "hover:tooltip hover:tooltip-open"
-              }`}
+              } hover:bg-gray-300`}
               data-tip="Copied!"
             >
               <RiFileCopyLine fontSize={24} />

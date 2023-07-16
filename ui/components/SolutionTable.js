@@ -39,7 +39,6 @@ const SolutionTable = ({ solutions }) => {
           {solutions.length > 0 &&
             solutions.map((solution, index) => {
               const { timestamp, txid, request, metrics, raw_tx } = solution;
-              const { algorithm } = request;
               const {
                 used_excess_strategy,
                 waste,
@@ -58,7 +57,11 @@ const SolutionTable = ({ solutions }) => {
                   <td>{index}</td>
                   <td className="input_field">{time}</td>
                   <td className="input_field">{txId}</td>
-                  <td className="input_field">{algorithm}</td>
+                  {request.algorithm ? (
+                    <td className="input_field">{request.algorithm}</td>
+                  ) : (
+                    <td className="input_field">--</td>
+                  )}
                   <td className="input_field capitalize">
                     {used_excess_strategy.split("_").join(" ")}
                   </td>
