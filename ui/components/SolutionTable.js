@@ -1,8 +1,8 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import TableHead from "@components/TableHead";
 import { RiBroadcastLine } from "@node_modules/react-icons/ri";
 import { AiOutlineExclamationCircle } from "@node_modules/react-icons/ai";
-import { POST } from "@utils/request";
+import { GET, POST } from "@utils/request";
 
 const SolutionTable = ({ solutions }) => {
   const titles = [
@@ -14,13 +14,18 @@ const SolutionTable = ({ solutions }) => {
     "Feerate Dev.",
     "TX size",
   ];
-
+  const [details, setDetails] = useState("");
   const handleBroadcast = useCallback((hex) => {
     POST(`http://localhost:8080/api/network/broadcast?tx=${hex}`).then(() =>
       window.my_modal_2.showModal(),
     );
   }, []);
 
+  const handleGetMoreDetails = useCallback((hex) => {
+    GET(`http://localhost:8080/api/decode?tx=${hex}`)
+      .then((r) => setDetails({ ...r }))
+      .then(() => setTimeout(window.my_modal_8.showModal(), 1500));
+  }, []);
   return (
     <>
       <table className="main_table">
@@ -85,6 +90,7 @@ const SolutionTable = ({ solutions }) => {
                       <button
                         className="tooltip tooltip-bottom"
                         data-tip="More Detail"
+                        onClick={() => handleGetMoreDetails(raw_tx)}
                       >
                         <AiOutlineExclamationCircle fontSize={24} />
                       </button>
@@ -103,6 +109,18 @@ const SolutionTable = ({ solutions }) => {
         >
           <h3 className="font-bold text-lg">Broadcast Success!</h3>
           <p className="py-4">Press ESC key or click outside to close</p>
+        </form>
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+      <dialog id="my_modal_8" className="modal">
+        <form
+          method="dialog"
+          className="modal-box w-5/6 max-w-5xl rounded-none"
+        >
+          <h3 className="font-bold text-lg">More Details</h3>
+          <p className="py-4">{JSON.stringify(details)}</p>
         </form>
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
