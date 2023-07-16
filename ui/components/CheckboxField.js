@@ -8,6 +8,7 @@ const CheckboxField = ({
   disableInput,
   onChange,
   value,
+  onToggleCheck,
 }) => {
   const handleChange = useCallback((e) => {
     onChange(e);
@@ -20,6 +21,7 @@ const CheckboxField = ({
           checked={checked}
           className="checkbox checkbox-sm rounded-none"
           disabled={disableCheckbox}
+          onChange={() => onToggleCheck((prev) => !prev)}
         />
         <span className="label-text whitespace-nowrap">{label}</span>
       </label>

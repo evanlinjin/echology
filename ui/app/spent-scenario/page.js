@@ -1,15 +1,18 @@
 "use client";
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import RecipientsTable from "@components/RecipientsTable";
 import { RiAddFill } from "react-icons/ri";
 import Cookies from "js-cookie";
 import CheckboxField from "@components/CheckboxField";
 import SolutionTable from "@components/SolutionTable";
 import NewSolutionForm from "@components/NewSolutionForm";
-import { API_ROOT, POST } from "@utils/request";
+import { POST } from "@utils/request";
 import { setCookie } from "@app/page";
+import Link from "next/link";
+import { IoChevronBackOutline } from "@node_modules/react-icons/io5";
 
 const SpentScenario = () => {
+  const [solutions, setSolution] = useState([]);
   const [recipients, setRecipients] = useState([
     {
       address: "",
@@ -29,6 +32,7 @@ const SpentScenario = () => {
   const [excessStrategy, setExcessStrategy] = useState("best_strategy");
   const [candidateOrder, setCandidateOrder] = useState("largest_first");
   const [isDone, setIsDone] = useState(undefined);
+  const [useLongTerm, setUseLongTerm] = useState(false);
 
   let selectedCoins = JSON.parse(Cookies.get("selectedCoins") || []);
   let totalAmount = JSON.parse(Cookies.get("totalAmount") || 0);
@@ -45,7 +49,9 @@ const SpentScenario = () => {
       recipients: [...recipients],
       min_absolute_fee: coinSelectionParameters.minAbsoluteFee,
       fee_rate: coinSelectionParameters.freeRate,
-      long_term_fee_rate: coinSelectionParameters.longTermFreeRate,
+      long_term_fee_rate: useLongTerm
+        ? coinSelectionParameters.longTermFreeRate
+        : undefined,
     };
     POST(
       `http://localhost:8080/api/wallet/${alias}/new_spend_scenario`,
@@ -56,43 +62,62 @@ const SpentScenario = () => {
     });
   }, []);
 
-  const handleChangeFreeRateParameters = useCallback((e) => {
-    setCoinSelectionParameters({
-      ...coinSelectionParameters,
-      freeRate: Number(e.target.value),
-    });
-  }, []);
+  const handleChangeFreeRateParameters = useCallback(
+    (e) => {
+      coinSelectionParameters.freeRate = Number(e.target.value);
+      setCoinSelectionParameters({ ...coinSelectionParameters });
+    },
+    [coinSelectionParameters],
+  );
 
-  const handleChangeMinAbsoluteParameters = useCallback((e) => {
-    setCoinSelectionParameters({
-      ...coinSelectionParameters,
-      minAbsoluteFee: Number(e.target.value),
-    });
-  }, []);
+  const handleChangeMinAbsoluteParameters = useCallback(
+    (e) => {
+      coinSelectionParameters.minAbsoluteFee = Number(e.target.value);
+      setCoinSelectionParameters({ ...coinSelectionParameters });
+    },
+    [coinSelectionParameters],
+  );
 
-  const handleChangeLongTermFreeRateParameters = useCallback((e) => {
-    setCoinSelectionParameters({
-      ...coinSelectionParameters,
-      longTermFreeRate: Number(e.target.value),
-    });
-  }, []);
+  const handleChangeLongTermFreeRateParameters = useCallback(
+    (e) => {
+      coinSelectionParameters.longTermFreeRate = Number(e.target.value);
+      setCoinSelectionParameters({ ...coinSelectionParameters });
+    },
+    [coinSelectionParameters],
+  );
 
   const handleRunSolution = useCallback(() => {
-    let parameters = { ...bnbParameters };
-    if (selectionAlgorithm === "select_until_finished") {
-      parameters = { candidate_order: candidateOrder };
-    }
-    const body = {
+    const bodyBnb = {
       spend_scenario_id: Cookies.get("spentScenarioId"),
-      algorithm: selectionAlgorithm,
-      parameters: parameters,
+      algorithm: "bnb",
+      parameters: { ...bnbParameters },
       excess_strategy: excessStrategy,
     };
-    //TODO: add to solution table if success
+    const bodySuf = {
+      spend_scenario_id: Cookies.get("spentScenarioId"),
+      algorithm: "select_until_finished",
+      parameters: { candidate_order: candidateOrder },
+      excess_strategy: excessStrategy,
+    };
+    let body;
+    if (selectionAlgorithm === "bnb") {
+      body = bodyBnb;
+    }
+    if (selectionAlgorithm === "select_until_finished") {
+      body = bodySuf;
+    }
     POST(`http://localhost:8080/api/wallet/${alias}/new_solution`, body).then(
-      (result) => console.log("result", result),
+      (result) => {
+        setSolution([{ ...result }]);
+      },
     );
-  }, []);
+  }, [
+    selectionAlgorithm,
+    bnbParameters,
+    excessStrategy,
+    candidateOrder,
+    setSolution,
+  ]);
 
   const handleAddSolutionClick = useCallback(() => {
     window.my_modal_5.showModal();
@@ -101,20 +126,20 @@ const SpentScenario = () => {
   // TODO: DELETE RECIPIENTS BY IDxXD
   const handleDeleteRecipient = useCallback(
     (e) => {
-      return recipients.splice(e.target.id, 1);
+      recipients.splice(e.target.id, 1);
+      setRecipients([...recipients]);
     },
     [recipients],
   );
 
-  // TODO: CHANGE ADDRESS
   const handleChangeRecipientAddress = useCallback(
     (e) => {
       const index = e.target.id;
-      const value = e.target.value;
-      recipients[index].address = value;
+      recipients[index].address = e.target.value;
+      console.log("index", index, recipients.length);
       setRecipients([...recipients]);
     },
-    [recipients],
+    [recipients, setRecipients],
   );
 
   const handleChangeRecipientAmount = useCallback(
@@ -124,11 +149,27 @@ const SpentScenario = () => {
       recipients[index].amount = Number(value);
       setRecipients([...recipients]);
     },
-    [recipients],
+    [recipients, setRecipients],
   );
+
+  const handleSwitchEditMode = useCallback(() => {
+    setIsDone(false);
+    setSolution([]);
+  }, [setIsDone, setSolution]);
+
   return (
     <div className="w-full flex gap-6 flex-col frame_padding">
-      <div className="page_title">Create Spent Scenarios:</div>
+      <Link
+        href="/coin-control"
+        className="rounded-none flex items-center w-1/5 cursor-pointer gap-2 font-medium hover:bg-gray-300"
+      >
+        <IoChevronBackOutline />
+        Back To Coin Control
+      </Link>
+
+      <div className="flex justify-between">
+        <div className="page_title">Create Spent Scenarios:</div>
+      </div>
       <div className="section items-center">
         <div className="section_title">Candidates:</div>
         <div className="section_desc">
@@ -156,7 +197,6 @@ const SpentScenario = () => {
             <div className="flex gap-6">
               <RecipientsTable
                 recipients={recipients}
-                onSetRecipients={setRecipients}
                 isDone={isDone}
                 onChangeRecipientAddress={handleChangeRecipientAddress}
                 onChangeRecipientAmount={handleChangeRecipientAmount}
@@ -187,6 +227,8 @@ const SpentScenario = () => {
                   onChange={handleChangeLongTermFreeRateParameters}
                   value={coinSelectionParameters.longTermFreeRate}
                   disableInput={isDone}
+                  checked={useLongTerm}
+                  onToggleCheck={setUseLongTerm}
                 />
               </div>
             </div>
@@ -194,7 +236,9 @@ const SpentScenario = () => {
           <div className="w-full flex justify-end">
             <button
               className="btn btn-active main_button"
-              onClick={handlePostNewSpent}
+              onClick={
+                isDone === true ? handleSwitchEditMode : handlePostNewSpent
+              }
             >
               {isDone === true ? "Edit" : "Done"}
             </button>
@@ -226,7 +270,7 @@ const SpentScenario = () => {
         </dialog>
       </div>
       <div className="section">
-        <SolutionTable />
+        <SolutionTable solutions={solutions} />
       </div>
     </div>
   );

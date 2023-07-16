@@ -1,12 +1,15 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { API_ROOT, GET } from "@utils/request";
-import { RiBitCoinLine } from "react-icons/ri";
+import { GET } from "@utils/request";
+import { RiBitCoinLine, RiFileCopyLine } from "react-icons/ri";
 import Cookies from "js-cookie";
 import { SlRefresh } from "react-icons/sl";
+import { CopyToClipboard } from "react-copy-to-clipboard";
 
 const Nav = () => {
   const [headerInfo, setHeaderInfo] = useState(undefined);
+  const [showCopied, setShowCopied] = useState(false);
+  const address = Cookies.get("address");
 
   useEffect(() => {
     GET(`http://localhost:8080/api/network/stats`).then((result) => {
@@ -20,44 +23,58 @@ const Nav = () => {
 
   const handleGetFreeMoney = useCallback(() => {
     const amount = Math.round(Math.random() * (4200000 - 42000) + 42000);
-    const address = Cookies.get("address");
     GET(
       `http://localhost:8080/api/faucet?address=${address}&amount=${amount}`,
-    ).then((r) => setTimeout(window.location.reload(), 3000));
+    ).then(() => setTimeout(window.location.reload(), 3000));
   }, []);
 
   const handleRefresh = useCallback(() => window.location.reload(), []);
 
   return (
-    <div className="min-h-fit w-full flex gap-5 frame_padding border-b border-gray-700">
-      <div className="avatar">
-        <div className="w-24 rounded-none">
-          <img src="/assets/images/avatar.jpg" alt="QR_code" />
+    <div className="min-h-fit w-full flex gap-5 frame_padding border-b border-gray-700 justify-between">
+      <div className="flex gap-5">
+        <div className="tooltip tooltip-bottom" data-tip="Get Free Money">
+          <div className="avatar">
+            <button onClick={handleGetFreeMoney} className="nav_button_square">
+              <RiBitCoinLine fontSize={56} />
+            </button>
+          </div>
+        </div>
+        <div className="tooltip tooltip-bottom" data-tip="Refresh">
+          <div className="avatar">
+            <button className="nav_button_square " onClick={handleRefresh}>
+              <SlRefresh fontSize={56} />
+            </button>
+          </div>
+        </div>
+        <div className="h-24 flex flex-col flex-wrap gap-x-5">
+          {headerInfo &&
+            Array.from(headerInfo, ([key, value]) => (
+              <div className="flex flex-wrap gap-3" key={key}>
+                <span className="capitalize">{key}:</span>
+                <span>{value}</span>
+              </div>
+            ))}
         </div>
       </div>
-      <div className="tooltip tooltip-bottom" data-tip="Get Free Money">
-        <div className="avatar">
-          <button onClick={handleGetFreeMoney} className="nav_button_square">
-            <RiBitCoinLine fontSize={56} />
-          </button>
-        </div>
-      </div>
-      <div className="tooltip tooltip-bottom" data-tip="Refresh">
-        <div className="avatar">
-          <button className="nav_button_square " onClick={handleRefresh}>
-            <SlRefresh fontSize={56} />
-          </button>
-        </div>
-      </div>
-      <div className=" h-24 flex flex-col flex-wrap gap-x-5">
-        {headerInfo &&
-          Array.from(headerInfo, ([key, value]) => (
-            <div className="flex flex-wrap gap-3" key={key}>
-              <span className="capitalize">{key}:</span>
-              <span>{value}</span>
+      {/*Address*/}
+      {address && (
+        <div className="flex flex-wrap gap-3 self-end justify-self-end">
+          <span className="capitalize">Address:</span>
+          <span>{address}</span>
+
+          <CopyToClipboard text={address} onCopy={() => setShowCopied(true)}>
+            <div
+              className={`hover:cursor-pointer ${
+                showCopied && "hover:tooltip hover:tooltip-open"
+              }`}
+              data-tip="Copied!"
+            >
+              <RiFileCopyLine fontSize={24} />
             </div>
-          ))}
-      </div>
+          </CopyToClipboard>
+        </div>
+      )}
     </div>
   );
 };

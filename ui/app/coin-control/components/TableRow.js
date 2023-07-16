@@ -6,7 +6,6 @@ const TableRow = ({ coin, index, setCoins, coins }) => {
   if (!coin) {
     return null;
   }
-  console.log("coin", coin);
   const { outpoint, amount, confirmations, spent_by, must_select } = coin;
 
   const handleChangeSelect = useCallback(

@@ -70,7 +70,7 @@
 }
 
 .input_field {
-    @apply text-body2 bg-gray-200 py-2.5 px-2.5 w-full focus-visible:border-none disabled:text-gray-400 disabled:bg-gray-200 disabled:cursor-not-allowed
+    @apply text-body2 bg-gray-200 py-2.5 px-2.5 focus-visible:border-none disabled:text-gray-400 disabled:bg-gray-200 disabled:cursor-not-allowed
 }
 
 .desc {

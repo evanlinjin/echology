@@ -1,5 +1,4 @@
 const SelectionDropdown = ({ onGlobalSelect, selected, onChange }) => {
-  console.log("selected", selected);
   return (
     <select
       className="select select-bordered rounded-none main_background rounded-none whitespace-nowrap border border-black"

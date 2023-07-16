@@ -7,9 +7,7 @@ const TABLE_HEAD_VALUE_OUTPOINTS = "OutPoints";
 const TABLE_HEAD_VALUE_CONFIRMATION = "Confirmation";
 const TABLE_HEAD_VALUE_SPENT_BY = "Spent By";
 const TABLE_HEAD_VALUE_AMOUNT = "Amount";
-const Table = ({ selectAllAs, coins, setCoins, selectedCoins }) => {
-  console.log("selectedCoins", selectedCoins);
-
+const Table = ({ selectAllAs, coins, setCoins }) => {
   const generateDesc = (label) => {
     if (label === TABLE_HEAD_VALUE_SPENT_BY) {
       return "txid / confirmations";
