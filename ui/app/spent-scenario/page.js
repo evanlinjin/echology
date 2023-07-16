@@ -67,7 +67,7 @@ const SpentScenario = () => {
         : undefined,
     };
     POST(
-      `http://localhost:8080/api/wallet/${alias}/new_spend_scenario`,
+      `api/wallet/${alias}/new_spend_scenario`,
       body,
     ).then((r) => {
       console.log("r", r);
@@ -127,7 +127,7 @@ const SpentScenario = () => {
     if (selectionAlgorithm === "select_until_finished") {
       body = bodySuf;
     }
-    POST(`http://localhost:8080/api/wallet/${alias}/new_solution`, body).then(
+    POST(`api/wallet/${alias}/new_solution`, body).then(
       (result) => {
         setSolution([...solutions, { ...result }]);
       },

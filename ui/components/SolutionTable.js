@@ -19,13 +19,13 @@ const SolutionTable = ({ solutions }) => {
   ];
   const [details, setDetails] = useState("");
   const handleBroadcast = useCallback((hex) => {
-    POST(`http://localhost:8080/api/network/broadcast?tx=${hex}`).then(() =>
+    POST(`api/network/broadcast?tx=${hex}`).then(() =>
       window.my_modal_2.showModal(),
     );
   }, []);
 
   const handleGetMoreDetails = useCallback((hex) => {
-    GET(`http://localhost:8080/api/decode?tx=${hex}`)
+    GET(`api/decode?tx=${hex}`)
       .then((r) => setDetails({ ...r }))
       .then(() => setTimeout(window.my_modal_8.showModal(), 1500));
   }, []);

@@ -11,5 +11,5 @@ export async function POST(url, body) {
   return await response.json();
 }
 
-// export const API_ROOT = process.env.SERVER_HOST;
-export const API_ROOT = `${process.env.SERVER_HOST}/api`;
+// export const API_ROOT = "/api";
+// export const API_ROOT = `${process.env.SERVER_HOST}/api`;

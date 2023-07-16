@@ -12,7 +12,7 @@ const Nav = () => {
   const address = Cookies.get("address");
 
   useEffect(() => {
-    GET(`http://localhost:8080/api/network/stats`).then((result) => {
+    GET(`api/network/stats`).then((result) => {
       const data = Object.entries(result).map(([key, value]) => {
         const newKey = key.replaceAll("_", " ");
         return [`${newKey}`, value];
@@ -24,7 +24,7 @@ const Nav = () => {
   const handleGetFreeMoney = useCallback(() => {
     const amount = Math.round(Math.random() * (4200000 - 42000) + 42000);
     GET(
-      `http://localhost:8080/api/faucet?address=${address}&amount=${amount}`,
+      `api/faucet?address=${address}&amount=${amount}`,
     ).then(() => setTimeout(window.location.reload(), 3000));
   }, []);
 
