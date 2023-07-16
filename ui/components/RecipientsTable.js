@@ -1,5 +1,4 @@
 "use client";
-import { useCallback, useState } from "react";
 import { RiCloseFill } from "react-icons/ri";
 import TableHead from "@components/TableHead";
 
@@ -31,7 +30,7 @@ const RecipientsTable = ({
                   value={recipient.address}
                   id={index}
                   type="text"
-                  className="input_field"
+                  className="input_field w-full"
                   onChange={onChangeRecipientAddress}
                   disabled={isDone === true}
                 />
@@ -42,7 +41,7 @@ const RecipientsTable = ({
                   key={`amount-${index}`}
                   value={recipient.amount}
                   type="number"
-                  className="input_field"
+                  className="input_field w-full"
                   onChange={onChangeRecipientAmount}
                   disabled={isDone === true}
                 />

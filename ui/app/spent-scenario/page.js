@@ -1,5 +1,5 @@
 "use client";
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import RecipientsTable from "@components/RecipientsTable";
 import { RiAddFill } from "react-icons/ri";
 import Cookies from "js-cookie";
@@ -32,9 +32,24 @@ const SpentScenario = () => {
   const [excessStrategy, setExcessStrategy] = useState("best_strategy");
   const [candidateOrder, setCandidateOrder] = useState("largest_first");
   const [isDone, setIsDone] = useState(undefined);
+  const [spentScenarioId, setSpentScenarioId] = useState(
+    Cookies.get("spentScenarioId") || "",
+  );
   const [useLongTerm, setUseLongTerm] = useState(false);
+  const [selectedCoins, setSelectedCoins] = useState(
+    Cookies.get("selectedCoins") || [],
+  );
+  useEffect(() => {
+    setSelectedCoins(JSON.parse(Cookies.get("selectedCoins") || []));
+  }, []);
+  useEffect(() => {
+    const id =
+      Cookies.get("spentScenarioId") !== "undefined"
+        ? JSON.parse(Cookies.get("spentScenarioId"))
+        : undefined;
+    setSpentScenarioId(id);
+  }, []);
 
-  let selectedCoins = JSON.parse(Cookies.get("selectedCoins") || []);
   let totalAmount = JSON.parse(Cookies.get("totalAmount") || 0);
   let alias = Cookies.get("alias");
 
@@ -42,11 +57,13 @@ const SpentScenario = () => {
   const handleAddRecipientsClick = useCallback(() => {
     setRecipients((prev) => [...prev, newRecipient]);
   }, []);
-
   const handlePostNewSpent = useCallback(() => {
     const body = {
       candidates: [...selectedCoins],
-      recipients: [...recipients],
+      recipients:
+        recipients.length === 1 && recipients[0].address === ""
+          ? undefined
+          : [...recipients],
       min_absolute_fee: coinSelectionParameters.minAbsoluteFee,
       fee_rate: coinSelectionParameters.freeRate,
       long_term_fee_rate: useLongTerm
@@ -57,10 +74,18 @@ const SpentScenario = () => {
       `http://localhost:8080/api/wallet/${alias}/new_spend_scenario`,
       body,
     ).then((r) => {
+      console.log("r", r);
       setCookie("spentScenarioId", r.spend_scenario_id);
       setIsDone(true);
     });
-  }, []);
+  }, [
+    setCookie,
+    setIsDone,
+    selectedCoins,
+    recipients,
+    coinSelectionParameters,
+    useLongTerm,
+  ]);
 
   const handleChangeFreeRateParameters = useCallback(
     (e) => {
@@ -88,13 +113,13 @@ const SpentScenario = () => {
 
   const handleRunSolution = useCallback(() => {
     const bodyBnb = {
-      spend_scenario_id: Cookies.get("spentScenarioId"),
+      spend_scenario_id: spentScenarioId,
       algorithm: "bnb",
       parameters: { ...bnbParameters },
       excess_strategy: excessStrategy,
     };
     const bodySuf = {
-      spend_scenario_id: Cookies.get("spentScenarioId"),
+      spend_scenario_id: spentScenarioId,
       algorithm: "select_until_finished",
       parameters: { candidate_order: candidateOrder },
       excess_strategy: excessStrategy,
@@ -136,7 +161,6 @@ const SpentScenario = () => {
     (e) => {
       const index = e.target.id;
       recipients[index].address = e.target.value;
-      console.log("index", index, recipients.length);
       setRecipients([...recipients]);
     },
     [recipients, setRecipients],
@@ -156,7 +180,7 @@ const SpentScenario = () => {
     setIsDone(false);
     setSolution([]);
   }, [setIsDone, setSolution]);
-
+  console.log("selectedCoins", selectedCoins);
   return (
     <div className="w-full flex gap-6 flex-col frame_padding">
       <Link
