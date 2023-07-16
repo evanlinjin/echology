@@ -40,7 +40,7 @@ const SpentScenario = () => {
   useEffect(() => {
     console.log(Cookies.get("spentScenarioId"));
     const id =
-      Cookies.get("spentScenarioId") !== 'undefined'
+      Cookies.get("spentScenarioId") !== "undefined"
         ? Cookies.get("spentScenarioId")
         : undefined;
     setSpentScenarioId(id);
@@ -129,7 +129,7 @@ const SpentScenario = () => {
     }
     POST(`http://localhost:8080/api/wallet/${alias}/new_solution`, body).then(
       (result) => {
-        setSolution([{ ...result }]);
+        setSolution([...solutions, { ...result }]);
       },
     );
   }, [
