@@ -13,12 +13,7 @@ import { IoChevronBackOutline } from "@node_modules/react-icons/io5";
 
 const SpentScenario = () => {
   const [solutions, setSolution] = useState([]);
-  const [recipients, setRecipients] = useState([
-    {
-      address: "",
-      amount: 0,
-    },
-  ]);
+  const [recipients, setRecipients] = useState([]);
   const [coinSelectionParameters, setCoinSelectionParameters] = useState({
     minAbsoluteFee: 0,
     freeRate: 1.5,
@@ -26,7 +21,7 @@ const SpentScenario = () => {
   });
   const [selectionAlgorithm, setSelectionAlgorithm] = useState("bnb");
   const [bnbParameters, setBnbParameters] = useState({
-    bnb_rounds: 420,
+    bnb_rounds: 4200,
     fallback: true,
   });
   const [excessStrategy, setExcessStrategy] = useState("best_strategy");
@@ -43,9 +38,10 @@ const SpentScenario = () => {
     setSelectedCoins(JSON.parse(Cookies.get("selectedCoins") || []));
   }, []);
   useEffect(() => {
+    console.log(Cookies.get("spentScenarioId"));
     const id =
-      Cookies.get("spentScenarioId") !== "undefined"
-        ? JSON.parse(Cookies.get("spentScenarioId"))
+      Cookies.get("spentScenarioId") !== 'undefined'
+        ? Cookies.get("spentScenarioId")
         : undefined;
     setSpentScenarioId(id);
   }, []);
