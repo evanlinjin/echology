@@ -5,6 +5,9 @@ import { AiOutlineExclamationCircle } from "@node_modules/react-icons/ai";
 import { GET, POST } from "@utils/request";
 
 const SolutionTable = ({ solutions }) => {
+  if (solutions.length === 0) {
+    return null;
+  }
   const titles = [
     "Time",
     "Txid",
@@ -38,68 +41,64 @@ const SolutionTable = ({ solutions }) => {
             <th></th>
           </tr>
         </thead>
-        {solutions.length === 0 ? (
-          "no solutions yet"
-        ) : (
-          <tbody>
-            {solutions.length > 0 &&
-              solutions.map((solution, index) => {
-                const { timestamp, txid, request, raw_tx } = solution;
-                const time = `${new Date(
-                  timestamp * 1000,
-                ).getHours()}:${new Date(timestamp * 1000).getMinutes()}`;
-                const txId = `${txid.substring(0, 6)}.....${txid.substring(
-                  txid.length - 6,
-                )}`;
+        <tbody>
+          {solutions.length > 0 &&
+            solutions.map((solution, index) => {
+              const { timestamp, txid, request, raw_tx } = solution;
+              const time = `${new Date(timestamp * 1000).getHours()}:${new Date(
+                timestamp * 1000,
+              ).getMinutes()}`;
+              const txId = `${txid.substring(0, 6)}.....${txid.substring(
+                txid.length - 6,
+              )}`;
 
-                return (
-                  <tr className="hover">
-                    <td>{index}</td>
-                    <td className="input_field">{time}</td>
-                    <td className="input_field">{txId}</td>
-                    {request.algorithm ? (
-                      <td className="input_field capitalize">
-                        {request.algorithm.split("_").join(" ")}
-                      </td>
-                    ) : (
-                      <td className="input_field">--</td>
-                    )}
+              return (
+                <tr className="hover">
+                  <td>{index}</td>
+                  <td className="input_field">{time}</td>
+                  <td className="input_field">{txId}</td>
+                  {request.algorithm ? (
                     <td className="input_field capitalize">
-                      {solution.metrics &&
-                        solution.metrics.used_excess_strategy
-                          .split("_")
-                          .join(" ")}
+                      {request.algorithm.split("_").join(" ")}
                     </td>
-                    <td className="input_field">
-                      {solution.metrics && solution.metrics.waste}
-                    </td>
-                    <td className="input_field">
-                      {solution.metrics && solution.metrics.feerate_deviation}
-                    </td>
-                    <td className="input_field">
-                      {solution.metrics && solution.metrics.tx_size}
-                    </td>
-                    <td className="flex gap-6 items-center h-full pt-2">
-                      <button
-                        onClick={() => handleBroadcast(raw_tx)}
-                        className="tooltip tooltip-bottom"
-                        data-tip="Broadcast"
-                      >
-                        <RiBroadcastLine fontSize={24} />
-                      </button>
-                      <button
-                        className="tooltip tooltip-bottom"
-                        data-tip="More Detail"
-                        onClick={() => handleGetMoreDetails(raw_tx)}
-                      >
-                        <AiOutlineExclamationCircle fontSize={24} />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-          </tbody>
-        )}
+                  ) : (
+                    <td className="input_field">--</td>
+                  )}
+                  <td className="input_field capitalize">
+                    {solution.metrics &&
+                      solution.metrics.used_excess_strategy
+                        .split("_")
+                        .join(" ")}
+                  </td>
+                  <td className="input_field">
+                    {solution.metrics && solution.metrics.waste}
+                  </td>
+                  <td className="input_field">
+                    {solution.metrics && solution.metrics.feerate_deviation}
+                  </td>
+                  <td className="input_field">
+                    {solution.metrics && solution.metrics.tx_size}
+                  </td>
+                  <td className="flex gap-6 items-center h-full pt-2">
+                    <button
+                      onClick={() => handleBroadcast(raw_tx)}
+                      className="tooltip tooltip-bottom"
+                      data-tip="Broadcast"
+                    >
+                      <RiBroadcastLine fontSize={24} />
+                    </button>
+                    <button
+                      className="tooltip tooltip-bottom"
+                      data-tip="More Detail"
+                      onClick={() => handleGetMoreDetails(raw_tx)}
+                    >
+                      <AiOutlineExclamationCircle fontSize={24} />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+        </tbody>
       </table>
 
       <dialog id="my_modal_2" className="modal">

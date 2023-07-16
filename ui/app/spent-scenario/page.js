@@ -293,11 +293,6 @@ const SpentScenario = () => {
             )}
           </div>
         </div>
-        <div className="section">
-          <button className="icon_button" onClick={handleAddSolutionClick}>
-            <RiAddFill className="hover:text-h5" />
-          </button>
-        </div>
       </div>
       <dialog id="my_modal_5" className="modal">
         <form
