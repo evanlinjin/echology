@@ -16,7 +16,7 @@ const SpentScenario = () => {
   const [recipients, setRecipients] = useState([]);
   const [coinSelectionParameters, setCoinSelectionParameters] = useState({
     minAbsoluteFee: 0,
-    freeRate: 1.5,
+    freeRate: 1.0,
     longTermFreeRate: 5.0,
   });
   const [selectionAlgorithm, setSelectionAlgorithm] = useState("bnb");
@@ -269,33 +269,54 @@ const SpentScenario = () => {
           </div>
         </div>
       </div>
-      <div className="section items-center">
-        <div className="section_title">Solution:</div>
-        <button className="icon_button" onClick={handleAddSolutionClick}>
-          <RiAddFill className="hover:text-h5" />
-        </button>
-        <dialog id="my_modal_5" className="modal">
-          <form
-            method="dialog"
-            className="modal-box rounded-none frame_padding border border-gray-700"
-          >
-            <NewSolutionForm
-              onRunSolution={handleRunSolution}
-              selectionAlgorithm={selectionAlgorithm}
-              excessStrategy={excessStrategy}
-              setSelectionAlgorithm={setSelectionAlgorithm}
-              setExcessStrategy={setExcessStrategy}
-              candidateOrder={candidateOrder}
-              setCandidateOrder={setCandidateOrder}
-              bnbParameters={bnbParameters}
-              setBnbParameters={setBnbParameters}
-            />
-          </form>
-        </dialog>
+      <div>
+        <div className="section_title_cap flex justify-between">
+          Solution:
+          <button className="icon_button" onClick={handleAddSolutionClick}>
+            <RiAddFill className="hover:text-h5" />
+          </button>
+        </div>
+        <div className="gap-4 flex-col border border-gray-700 w-full frame_padding flex items-start">
+          <div className="section items-center flex flex-col w-full ">
+            {solutions.length > 0 ? (
+              <SolutionTable solutions={solutions} />
+            ) : (
+              <div className="flex gap-5">
+                <span>No solutions yet..</span>
+                <button
+                  className="icon_button"
+                  onClick={handleAddSolutionClick}
+                >
+                  <RiAddFill className="hover:text-h5" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="section">
+          <button className="icon_button" onClick={handleAddSolutionClick}>
+            <RiAddFill className="hover:text-h5" />
+          </button>
+        </div>
       </div>
-      <div className="section">
-        <SolutionTable solutions={solutions} />
-      </div>
+      <dialog id="my_modal_5" className="modal">
+        <form
+          method="dialog"
+          className="modal-box rounded-none frame_padding border border-gray-700"
+        >
+          <NewSolutionForm
+            onRunSolution={handleRunSolution}
+            selectionAlgorithm={selectionAlgorithm}
+            excessStrategy={excessStrategy}
+            setSelectionAlgorithm={setSelectionAlgorithm}
+            setExcessStrategy={setExcessStrategy}
+            candidateOrder={candidateOrder}
+            setCandidateOrder={setCandidateOrder}
+            bnbParameters={bnbParameters}
+            setBnbParameters={setBnbParameters}
+          />
+        </form>
+      </dialog>
     </div>
   );
 };
