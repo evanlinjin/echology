@@ -11,31 +11,40 @@ const NewSolutionForm = ({
   bnbParameters,
   setBnbParameters,
 }) => {
-  const handleChangeAlgorithm = useCallback((e) => {
-    setSelectionAlgorithm(e.target.value);
-  }, []);
-  const handleChangeCandidateOrder = useCallback((e) => {
-    setCandidateOrder(e.target.value);
-  }, []);
+  const handleChangeAlgorithm = useCallback(
+    (e) => {
+      console.log("handleChangeAlgorithm", e.target.value);
+      setSelectionAlgorithm(e.target.value);
+    },
+    [setSelectionAlgorithm],
+  );
+  const handleChangeCandidateOrder = useCallback(
+    (e) => {
+      setCandidateOrder(e.target.value);
+    },
+    [setCandidateOrder],
+  );
 
   const handleChangeBnbRounds = useCallback(
     (e) => {
-      setBnbParameters({ ...bnbParameters, bnb_rounds: e.target.value });
-    },
-    [bnbParameters],
-  );
-  const handleChangeBnbFallback = useCallback(
-    (e) => {
       setBnbParameters({
         ...bnbParameters,
-        fallback: e.target.value === "on",
+        bnb_rounds: Number(e.target.value),
       });
     },
-    [bnbParameters],
+    [bnbParameters, setBnbParameters],
   );
-  const handleChangeExcessStrategy = useCallback((e) => {
-    setExcessStrategy(e.target.value);
-  }, []);
+  const handleChangeBnbFallback = useCallback(() => {
+    const prev = bnbParameters.fallback;
+    setBnbParameters({ ...bnbParameters, fallback: !prev });
+  }, [bnbParameters, setBnbParameters]);
+
+  const handleChangeExcessStrategy = useCallback(
+    (e) => {
+      setExcessStrategy(e.target.value);
+    },
+    [setExcessStrategy],
+  );
 
   const bnbParametersFields = (
     <div className="frame_padding main_frame gap-4 flex flex-col">
