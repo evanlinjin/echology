@@ -176,7 +176,6 @@ const SpentScenario = () => {
     setIsDone(false);
     setSolution([]);
   }, [setIsDone, setSolution]);
-  console.log("selectedCoins", selectedCoins);
   return (
     <div className="w-full flex gap-6 flex-col frame_padding">
       <Link
