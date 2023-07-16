@@ -29,6 +29,7 @@ const CheckboxField = ({
         <input
           type="number"
           placeholder="Type here"
+          min={0}
           className="input_field w-15"
           onChange={handleChange}
           pattern="[0-9]"

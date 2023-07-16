@@ -21,7 +21,7 @@ const RecipientsTable = ({
           </tr>
         </thead>
         <tbody>
-          {recipients.map((recipient, index) => (
+          {recipients.length > 0 && recipients.map((recipient, index) => (
             <tr className="hover" key={`recipient-${index}`}>
               <th>{index}</th>
               <td>
