@@ -59,13 +59,13 @@ const Nav = () => {
       </div>
       {/*Address*/}
       {address && (
-        <div className="flex flex-wrap gap-3 self-end justify-self-end">
+        <div className="flex flex-wrap gap-3 self-end justify-self-end items-center">
           <span className="capitalize">Address:</span>
           <span>{address}</span>
 
           <CopyToClipboard text={address} onCopy={() => setShowCopied(true)}>
             <div
-              className={`hover:cursor-pointer ${
+              className={`hover:cursor-pointer item_padding ${
                 showCopied && "hover:tooltip hover:tooltip-open"
               } hover:bg-gray-300`}
               data-tip="Copied!"
