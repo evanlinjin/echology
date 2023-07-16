@@ -155,9 +155,12 @@ const SpentScenario = () => {
 
   const handleChangeRecipientAddress = useCallback(
     (e) => {
-      const index = e.target.id;
-      recipients[index].address = e.target.value;
-      setRecipients([...recipients]);
+      const copy = recipients;
+      copy.splice(e.target.id, 1, {
+        ...copy[e.target.id],
+        address: e.target.value,
+      });
+      setRecipients([...copy]);
     },
     [recipients, setRecipients],
   );
@@ -176,6 +179,8 @@ const SpentScenario = () => {
     setIsDone(false);
     setSolution([]);
   }, [setIsDone, setSolution]);
+
+  console.log("recipients", recipients);
   return (
     <div className="w-full flex gap-6 flex-col frame_padding">
       <Link
