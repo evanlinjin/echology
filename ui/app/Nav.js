@@ -12,7 +12,7 @@ const Nav = () => {
   const address = Cookies.get("address");
 
   useEffect(() => {
-    GET(`http://localhost:8080/api/network/stats`).then((result) => {
+    GET("http://localhost:8080/api/network/stats").then((result) => {
       const data = Object.entries(result).map(([key, value]) => {
         const newKey = key.replaceAll("_", " ");
         return [`${newKey}`, value];
@@ -21,8 +21,7 @@ const Nav = () => {
     });
   }, []);
 
-  const handleGetFreeMoney = useCallback(() => {
-    const amount = Math.round(Math.random() * (4200000 - 42000) + 42000);
+  const handleGetFreeMoney = useCallback((amount) => {
     GET(
       `http://localhost:8080/api/faucet?address=${address}&amount=${amount}`,
     ).then(() => setTimeout(window.location.reload(), 3000));
@@ -35,9 +34,12 @@ const Nav = () => {
       <div className="flex gap-5">
         <div className="tooltip tooltip-bottom" data-tip="Get Free Money">
           <div className="avatar">
-            <button onClick={handleGetFreeMoney} className="nav_button_square">
+            <label
+              htmlFor="free_money_dialog"
+              className="btn nav_button_square"
+            >
               <RiBitCoinLine fontSize={56} />
-            </button>
+            </label>
           </div>
         </div>
         <div className="tooltip tooltip-bottom" data-tip="Refresh">
@@ -75,6 +77,48 @@ const Nav = () => {
           </CopyToClipboard>
         </div>
       )}
+      <div>
+        <input
+          type="checkbox"
+          id="free_money_dialog"
+          className="modal-toggle"
+        />
+        <div className="modal">
+          <div className="modal-box rounded-none">
+            <h3 className="text-lg font-bold">Get Free Money!</h3>
+            <p className="py-4">Please select the amount you want:</p>
+            <div className="flex gap-4">
+              <button
+                className="black_button w-full"
+                onClick={() => handleGetFreeMoney(1000)}
+              >
+                1000
+              </button>
+              <button
+                className="black_button w-full"
+                onClick={() => handleGetFreeMoney(2000)}
+              >
+                2000
+              </button>
+              <button
+                className="black_button w-full"
+                onClick={() => handleGetFreeMoney(3000)}
+              >
+                3000
+              </button>
+              <button
+                className="black_button w-full"
+                onClick={() => handleGetFreeMoney(4000)}
+              >
+                4000
+              </button>
+            </div>
+          </div>
+          <label className="modal-backdrop" htmlFor="free_money_dialog">
+            Close
+          </label>
+        </div>
+      </div>
     </div>
   );
 };
