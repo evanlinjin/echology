@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import SelectionDropdown from "@components/SelectionDropdown";
 import Table from "@app/coin-control/components/Table";
 import { GET } from "@utils/request";
@@ -22,9 +22,9 @@ const CoinControl = () => {
       const coinsWithSelection = data.map((coin) => {
         return { ...coin, must_select: undefined };
       });
-      setMyCoins(coinsWithSelection);
+      setMyCoins([...coinsWithSelection]);
     });
-  }, []);
+  }, [setMyCoins]);
 
   useEffect(() => {
     const filteredCoins = myCoins
@@ -67,7 +67,7 @@ const CoinControl = () => {
   const hasAtLeastOneSelected = useMemo(() => {
     const result = myCoins.map((coin) => {
       const { must_select } = coin;
-      if (must_select !== undefined && must_select !== null) {
+      if (must_select !== undefined) {
         return 1;
       }
       return 0;
@@ -132,4 +132,4 @@ const CoinControl = () => {
     </div>
   );
 };
-export default CoinControl;
+export default memo(CoinControl);
