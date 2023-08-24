@@ -13,7 +13,7 @@
 }
 
 .main_button {
-    @apply main_background rounded-none py-2.5 px-2.5  border border-black whitespace-nowrap h-fit
+    @apply btn main_background rounded-none py-2.5 px-2.5  border border-black whitespace-nowrap h-fit font-medium capitalize disabled:cursor-not-allowed disabled:text-gray-500
 }
 
 .black_button {
@@ -25,7 +25,7 @@
 }
 
 .nav_button_square {
-    @apply w-24 h-24 rounded-none main_background grid place-items-center
+    @apply w-[70px] h-[70px] rounded-none main_background grid place-items-center
 }
 
 .page_title {

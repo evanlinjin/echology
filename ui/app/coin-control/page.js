@@ -1,6 +1,5 @@
 "use client";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
-import SelectionDropdown from "@components/SelectionDropdown";
 import Table from "@app/coin-control/components/Table";
 import { GET } from "@utils/request";
 import { convertSelectedValue } from "@app/coin-control/components/converter";
@@ -45,8 +44,8 @@ const CoinControl = () => {
   }, [selectedCoins, myCoins]);
 
   const handleSelectAllAs = useCallback(
-    (e) => {
-      const selectedValue = convertSelectedValue(e.target.value);
+    (value) => {
+      const selectedValue = convertSelectedValue(value);
       const newCoins = myCoins.map((coin) => {
         return { ...coin, must_select: selectedValue };
       });
@@ -86,18 +85,14 @@ const CoinControl = () => {
         <div className="page_title">Coin Control</div>
         <div className="flex gap-10">
           <button
-            className="main_button disabled:cursor-not-allowed disabled:text-gray-500"
+            className="main_button"
             onClick={handleClearAllSelection}
             disabled={hasAtLeastOneSelected === 0}
           >
             Clear Selection
           </button>
-          <div className="flex gap-3 items-center">
-            <span>Select all unspent coins as</span>
-            <SelectionDropdown
-              onGlobalSelect={handleSelectAllAs}
-              selected={selectAllAs}
-            />
+          <div className="main_button" onClick={() => handleSelectAllAs("0")}>
+            Select all unspent coins as <strong>Select</strong>
           </div>
         </div>
       </div>
@@ -121,7 +116,7 @@ const CoinControl = () => {
             onClick={handleClickCreateTx}
           >
             <button
-              className="main_button disabled:cursor-not-allowed disabled:text-gray-500"
+              className="main_button"
               disabled={hasAtLeastOneSelected === 0}
             >
               next create tx &gt;
