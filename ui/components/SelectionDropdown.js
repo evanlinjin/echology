@@ -3,11 +3,8 @@ const SelectionDropdown = ({ onGlobalSelect, selected, onChange }) => {
     <select
       className="select select-bordered rounded-none main_background  whitespace-nowrap border border-black"
       onChange={onGlobalSelect || onChange}
-      defaultValue={undefined}
+      defaultValue={0}
     >
-      <option disabled selected={selected === undefined}>
-        please select
-      </option>
       <option selected={selected === true} value={1}>
         Must Spend
       </option>
