@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SelectionDropdown from "@components/SelectionDropdown";
 import Table from "@app/coin-control/components/Table";
-import { API_ROOT, GET } from "@utils/request";
+import { GET } from "@utils/request";
 import { convertSelectedValue } from "@app/coin-control/components/converter";
 import Cookies from "js-cookie";
 import Link from "next/link";
@@ -84,7 +84,7 @@ const CoinControl = () => {
     <div className="frame_padding flex flex-col gap-8">
       <div className="flex justify-between w-full items-end ">
         <div className="page_title">Coin Control</div>
-        <div className="flex flex gap-10">
+        <div className="flex gap-10">
           <button
             className="main_button disabled:cursor-not-allowed disabled:text-gray-500"
             onClick={handleClearAllSelection}
@@ -116,7 +116,7 @@ const CoinControl = () => {
             sats
           </span>
           <Link
-            href="/spent-scenario"
+            href={"/spent-scenario"}
             className="w-full"
             onClick={handleClickCreateTx}
           >
