@@ -9,7 +9,11 @@ import { CopyToClipboard } from "react-copy-to-clipboard";
 const Nav = () => {
   const [headerInfo, setHeaderInfo] = useState(undefined);
   const [showCopied, setShowCopied] = useState(false);
-  const address = Cookies.get("address");
+  const [address, setAddress] = useState(undefined);
+
+  useEffect(() => {
+    setAddress(Cookies.get("address"));
+  }, []);
 
   useEffect(() => {
     GET("http://localhost:8080/api/network/stats").then((result) => {
@@ -24,7 +28,7 @@ const Nav = () => {
   const handleGetFreeMoney = useCallback((amount) => {
     GET(
       `http://localhost:8080/api/faucet?address=${address}&amount=${amount}`,
-    ).then(() => setTimeout(window.location.reload(), 3000));
+    ).then(() => setTimeout(() => handleRefresh(), 3000));
   }, []);
 
   const handleRefresh = useCallback(() => window.location.reload(), []);
