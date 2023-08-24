@@ -1,15 +1,15 @@
 "use client";
 import { memo, useCallback, useEffect, useState } from "react";
-import RecipientsTable from "@components/RecipientsTable";
+import Link from "next/link";
 import { RiAddFill } from "react-icons/ri";
+import { IoChevronBackOutline } from "react-icons/io5";
 import Cookies from "js-cookie";
+import RecipientsTable from "@components/RecipientsTable";
 import CheckboxField from "@components/CheckboxField";
 import SolutionTable from "@components/SolutionTable";
 import NewSolutionForm from "@components/NewSolutionForm";
 import { POST } from "@utils/request";
 import { setCookie } from "@app/page";
-import Link from "next/link";
-import { IoChevronBackOutline } from "@node_modules/react-icons/io5";
 
 const SpentScenario = () => {
   const [solutions, setSolution] = useState([]);
@@ -184,7 +184,7 @@ const SpentScenario = () => {
   return (
     <div className="w-full flex gap-6 flex-col frame_padding">
       <Link
-        href="/coin-control"
+        href={"/coin-control"}
         className="rounded-none flex items-center w-1/5 cursor-pointer gap-2 font-medium hover:bg-gray-300"
       >
         <IoChevronBackOutline />
@@ -237,7 +237,7 @@ const SpentScenario = () => {
                   value={coinSelectionParameters.minAbsoluteFee}
                 />
                 <CheckboxField
-                  label="Free Rate:"
+                  label="Feerate:"
                   unit="sats / vbytes"
                   checked
                   disableCheckbox
@@ -246,7 +246,7 @@ const SpentScenario = () => {
                   value={coinSelectionParameters.freeRate}
                 />
                 <CheckboxField
-                  label="Long Term Free Rate:"
+                  label="Long Term Feerate:"
                   unit="sats / vbytes"
                   onChange={handleChangeLongTermFreeRateParameters}
                   value={coinSelectionParameters.longTermFreeRate}
