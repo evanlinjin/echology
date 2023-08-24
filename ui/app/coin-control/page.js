@@ -93,7 +93,7 @@ const CoinControl = () => {
             Clear Selection
           </button>
           <div className="flex gap-3 items-center">
-            <span>Select all as</span>
+            <span>Select all unspent coins as</span>
             <SelectionDropdown
               onGlobalSelect={handleSelectAllAs}
               selected={selectAllAs}

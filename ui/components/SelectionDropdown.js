@@ -1,21 +1,21 @@
 const SelectionDropdown = ({ onGlobalSelect, selected, onChange }) => {
   return (
     <select
-      className="select select-bordered rounded-none main_background rounded-none whitespace-nowrap border border-black"
+      className="select select-bordered rounded-none main_background  whitespace-nowrap border border-black"
       onChange={onGlobalSelect || onChange}
     >
       <option disabled selected={selected === undefined}>
         please select
       </option>
       <option selected={selected === true} value={1}>
-        Must Select
+        Must Spend
       </option>
       <option selected={selected === false} value={0}>
-        Can Select
+        Select
       </option>
       {/* eslint-disable-next-line react/no-unescaped-entities */}
       <option selected={selected === null} value={-1}>
-        Don't Select
+        Ignore
       </option>
     </select>
   );
