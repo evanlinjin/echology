@@ -1,6 +1,7 @@
 import "@styles/global.css";
 
 import { IBM_Plex_Mono, Rubik_Mono_One } from "next/font/google";
+import { CoinContextProvider } from "@app/context/coins";
 
 const ibmPlexMono = IBM_Plex_Mono({
   subsets: ["latin"],
@@ -30,7 +31,7 @@ export default function RootLayout({ children }) {
       <body>
         <main className="app">
           <div className="main_frame_no_padding grid place-items-center">
-            {children}
+            <CoinContextProvider>{children}</CoinContextProvider>
           </div>
         </main>
       </body>

@@ -1,5 +1,5 @@
 "use client";
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import Link from "next/link";
 import { RiAddFill } from "react-icons/ri";
 import { IoChevronBackOutline } from "react-icons/io5";
@@ -10,8 +10,10 @@ import SolutionTable from "@components/SolutionTable";
 import NewSolutionForm from "@components/NewSolutionForm";
 import { POST } from "@utils/request";
 import { setCookie } from "@app/page";
+import { useCoinContext } from "@app/context/coins";
 
 const SpentScenario = () => {
+  const { alias, spentScenarioId, selectedCoins } = useCoinContext();
   const [solutions, setSolution] = useState([]);
   const [recipients, setRecipients] = useState([]);
   const [coinSelectionParameters, setCoinSelectionParameters] = useState({
@@ -27,27 +29,10 @@ const SpentScenario = () => {
   const [excessStrategy, setExcessStrategy] = useState("best_strategy");
   const [candidateOrder, setCandidateOrder] = useState("largest_first");
   const [isDone, setIsDone] = useState(undefined);
-  const [spentScenarioId, setSpentScenarioId] = useState(
-    Cookies.get("spentScenarioId") || "",
-  );
+
   const [useLongTerm, setUseLongTerm] = useState(false);
-  const [selectedCoins, setSelectedCoins] = useState(
-    Cookies.get("selectedCoins") || [],
-  );
-  useEffect(() => {
-    setSelectedCoins(JSON.parse(Cookies.get("selectedCoins") || []));
-  }, []);
-  useEffect(() => {
-    console.log(Cookies.get("spentScenarioId"));
-    const id =
-      Cookies.get("spentScenarioId") !== "undefined"
-        ? Cookies.get("spentScenarioId")
-        : undefined;
-    setSpentScenarioId(id);
-  }, []);
 
   let totalAmount = JSON.parse(Cookies.get("totalAmount") || 0);
-  let alias = Cookies.get("alias");
 
   const newRecipient = { address: "", amount: 0 };
   const handleAddRecipientsClick = useCallback(() => {
@@ -141,7 +126,7 @@ const SpentScenario = () => {
   ]);
 
   const handleAddSolutionClick = useCallback(() => {
-    window.my_modal_5.showModal();
+    window["my_modal_5"].showModal();
   }, []);
 
   // TODO: DELETE RECIPIENTS BY IDxXD
