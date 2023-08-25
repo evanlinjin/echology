@@ -8,6 +8,60 @@
 
 /* Tailwind Styles */
 
+
+.rating li {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    text-align: center;
+    border-radius: 50%;
+    font-size: 19px;
+    border: 1px rgba(238, 238, 238, 0.452) solid;
+    transition: 0.3s;
+    color: #fff;
+    position: relative;
+    width: 2rem;
+    height: 2rem;
+    background-color: #eee;
+    /*color: #ccc;*/
+    /*transition: 0.3s;*/
+
+    & label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        cursor: pointer;
+        color: #000000;
+    }
+}
+
+.rating li:hover {
+    background: #ff6a95;
+    color: #fff;
+
+    & label {
+        color: #fff;
+    }
+}
+
+[type="radio"] {
+    opacity: 0;
+}
+
+[type="radio"]:checked ~ label {
+    background: #ff6a95;
+    color: #fff;
+}
+
+
 .main_background {
     @apply bg-gray-300
 }
