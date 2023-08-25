@@ -1,23 +1,21 @@
 "use client";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import Table from "@app/coin-control/components/Table";
-import { GET } from "@utils/request";
 import { convertSelectedValue } from "@app/coin-control/components/converter";
-import Cookies from "js-cookie";
 import Link from "next/link";
 import { setCookie } from "@app/page";
+import { useCoinContext } from "@app/context/coins";
+import { GET } from "@utils/request";
 
 export const COIN_SELECT_OPTION_CANDIDATE = "candidate";
 export const COIN_SELECT_OPTION_IGNORED = "ignored";
 export const COIN_SELECT_OPTION_MUST_SPEND = "must spend";
 
 const CoinControl = () => {
+  const { coins, setCoins, alias, setCoinsToView } = useCoinContext();
   const [selectAllAs, setSelectAllTo] = useState(undefined);
   const [selectedCoins, setSelectedCoins] = useState([]);
-  const [myCoins, setMyCoins] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
-
-  const alias = Cookies.get("alias");
 
   useEffect(() => {
     GET(`http://localhost:8080/api/wallet/${alias}/coins`).then((result) => {
@@ -25,16 +23,17 @@ const CoinControl = () => {
       const coinsWithSelection = data.map((coin) => {
         return { ...coin, must_select: undefined };
       });
-      setMyCoins([...coinsWithSelection]);
+      setCoins([...coinsWithSelection]);
+      setCoinsToView([...coinsWithSelection]);
     });
-  }, [setMyCoins]);
+  }, []);
 
   useEffect(() => {
-    const filteredCoins = myCoins
+    const filteredCoins = coins
       .filter((coin) => coin.must_select !== undefined)
       .filter((coin) => coin.must_select !== null);
     setSelectedCoins(filteredCoins);
-  }, [myCoins]);
+  }, [coins]);
 
   useEffect(() => {
     if (selectedCoins.length === 0) {
@@ -45,30 +44,30 @@ const CoinControl = () => {
     }, 0);
 
     setTotalAmount(total);
-  }, [selectedCoins, myCoins]);
+  }, [selectedCoins, coins]);
 
   const handleSelectAllAs = useCallback(
     (value) => {
       const selectedValue = convertSelectedValue(value);
-      const newCoins = myCoins.map((coin) => {
+      const newCoins = coins.map((coin) => {
         return { ...coin, must_select: selectedValue };
       });
-      setMyCoins(newCoins);
+      setCoins(newCoins);
       setSelectAllTo(selectedValue);
     },
-    [myCoins],
+    [coins],
   );
 
   const handleClearAllSelection = useCallback(() => {
-    const deselectedCoins = myCoins.map((coin) => {
+    const deselectedCoins = coins.map((coin) => {
       return { ...coin, must_select: null };
     });
-    setMyCoins(deselectedCoins);
+    setCoins(deselectedCoins);
     setSelectAllTo(null);
-  }, [myCoins]);
+  }, [coins]);
 
   const hasAtLeastOneSelected = useMemo(() => {
-    const result = myCoins.map((coin) => {
+    const result = coins.map((coin) => {
       const { must_select } = coin;
       if (must_select !== undefined) {
         return 1;
@@ -76,7 +75,7 @@ const CoinControl = () => {
       return 0;
     });
     return result.find((select) => select === 1) || 0;
-  }, [myCoins]);
+  }, [coins]);
 
   const handleClickCreateTx = async () => {
     setCookie("selectedCoins", JSON.stringify(selectedCoins));
@@ -93,10 +92,10 @@ const CoinControl = () => {
             onClick={handleClearAllSelection}
             disabled={hasAtLeastOneSelected === 0}
           >
-            Clear Selection
+            Ignore All
           </button>
           <div className="main_button" onClick={() => handleSelectAllAs("0")}>
-            Select all unspent coins as{" "}
+            Select all UTXOs as{" "}
             <strong className="capitalize">
               {COIN_SELECT_OPTION_CANDIDATE}
             </strong>
@@ -105,8 +104,6 @@ const CoinControl = () => {
       </div>
       <Table
         selectAllAs={selectAllAs}
-        coins={myCoins}
-        setCoins={setMyCoins}
         selectedCoins={selectedCoins}
         hasAtLeastOneSelected={hasAtLeastOneSelected}
       />
