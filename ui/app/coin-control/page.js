@@ -7,6 +7,10 @@ import Cookies from "js-cookie";
 import Link from "next/link";
 import { setCookie } from "@app/page";
 
+export const COIN_SELECT_OPTION_CANDIDATE = "candidate";
+export const COIN_SELECT_OPTION_IGNORED = "ignored";
+export const COIN_SELECT_OPTION_MUST_SPEND = "must spend";
+
 const CoinControl = () => {
   const [selectAllAs, setSelectAllTo] = useState(undefined);
   const [selectedCoins, setSelectedCoins] = useState([]);
@@ -57,10 +61,10 @@ const CoinControl = () => {
 
   const handleClearAllSelection = useCallback(() => {
     const deselectedCoins = myCoins.map((coin) => {
-      return { ...coin, must_select: undefined };
+      return { ...coin, must_select: null };
     });
     setMyCoins(deselectedCoins);
-    setSelectAllTo(undefined);
+    setSelectAllTo(null);
   }, [myCoins]);
 
   const hasAtLeastOneSelected = useMemo(() => {
@@ -92,7 +96,10 @@ const CoinControl = () => {
             Clear Selection
           </button>
           <div className="main_button" onClick={() => handleSelectAllAs("0")}>
-            Select all unspent coins as <strong>Select</strong>
+            Select all unspent coins as{" "}
+            <strong className="capitalize">
+              {COIN_SELECT_OPTION_CANDIDATE}
+            </strong>
           </div>
         </div>
       </div>
