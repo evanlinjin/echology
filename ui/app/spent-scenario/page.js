@@ -11,11 +11,13 @@ import NewSolutionForm from "@components/NewSolutionForm";
 import { POST } from "@utils/request";
 import { setCookie } from "@app/page";
 import { useCoinContext } from "@app/context/coins";
+import { CopyToClipboard } from "@node_modules/react-copy-to-clipboard";
 
 const SpentScenario = () => {
-  const { alias, spentScenarioId, selectedCoins } = useCoinContext();
+  const { alias, spentScenarioId, selectedCoins, address } = useCoinContext();
   const [solutions, setSolution] = useState([]);
   const [recipients, setRecipients] = useState([]);
+  const [showCopied, setShowCopied] = useState(false);
   const [coinSelectionParameters, setCoinSelectionParameters] = useState({
     minAbsoluteFee: 0,
     freeRate: 1.0,
@@ -168,14 +170,29 @@ const SpentScenario = () => {
   console.log("recipients", recipients);
   return (
     <div className="w-full flex gap-6 flex-col frame_padding">
-      <Link
-        href={"/coin-control"}
-        className="rounded-none flex items-center w-1/5 cursor-pointer gap-2 font-medium hover:bg-gray-300"
-      >
-        <IoChevronBackOutline />
-        Back To Coin Control
-      </Link>
+      <div className="w-full flex justify-between">
+        <Link
+          href={"/coin-control"}
+          className="rounded-none flex items-center w-1/5 cursor-pointer gap-2 font-medium hover:bg-gray-300"
+        >
+          <IoChevronBackOutline />
+          Back To Coin Control
+        </Link>
+        <div className="flex flex-wrap gap-3 self-start items-center">
+          <span className="capitalize">Address:</span>
 
+          <CopyToClipboard text={address} onCopy={() => setShowCopied(true)}>
+            <span
+              className={`hover:cursor-pointer ${
+                showCopied && "hover:tooltip hover:tooltip-open"
+              } hover:bg-gray-200 item_padding`}
+              data-tip="Copied!"
+            >
+              {address}
+            </span>
+          </CopyToClipboard>
+        </div>
+      </div>
       <div className="flex justify-between">
         <div className="page_title">Create Spent Scenarios:</div>
       </div>
