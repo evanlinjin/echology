@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "daisyui": "^3.2.1",
+    "postcss-nesting": "^12.0.1",
     "prettier": "^3.0.0"
   }
 }
