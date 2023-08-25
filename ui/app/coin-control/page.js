@@ -12,7 +12,8 @@ export const COIN_SELECT_OPTION_IGNORED = "ignored";
 export const COIN_SELECT_OPTION_MUST_SPEND = "must spend";
 
 const CoinControl = () => {
-  const { coins, setCoins, alias, setCoinsToView } = useCoinContext();
+  const { coins, setCoins, alias, setCoinsToView, coinsToView } =
+    useCoinContext();
   const [selectAllAs, setSelectAllTo] = useState(undefined);
   const [selectedCoins, setSelectedCoins] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
@@ -20,20 +21,35 @@ const CoinControl = () => {
   useEffect(() => {
     GET(`http://localhost:8080/api/wallet/${alias}/coins`).then((result) => {
       const data = result.coins;
+      let spentCoins = [];
+      let unspentCoins = [];
       const coinsWithSelection = data.map((coin) => {
         return { ...coin, must_select: undefined };
       });
+      data.forEach((coin) => {
+        const { spent_by } = coin;
+        if (!spent_by) {
+          unspentCoins.push({ ...coin, must_select: false });
+        } else {
+          spentCoins.push({ ...coin, must_select: null });
+        }
+      });
+      const sortedSpentCoins = spentCoins.sort((a, b) => {
+        const txidA = a.spent_by ? a.spent_by.txid : "";
+        const txidB = b.spent_by ? b.spent_by.txid : "";
+        return txidA.localeCompare(txidB);
+      });
       setCoins([...coinsWithSelection]);
-      setCoinsToView([...coinsWithSelection]);
+      setCoinsToView([...unspentCoins, ...sortedSpentCoins]);
     });
   }, []);
 
   useEffect(() => {
-    const filteredCoins = coins
+    const filteredCoins = coinsToView
       .filter((coin) => coin.must_select !== undefined)
       .filter((coin) => coin.must_select !== null);
     setSelectedCoins(filteredCoins);
-  }, [coins]);
+  }, [coinsToView]);
 
   useEffect(() => {
     if (selectedCoins.length === 0) {
@@ -44,30 +60,35 @@ const CoinControl = () => {
     }, 0);
 
     setTotalAmount(total);
-  }, [selectedCoins, coins]);
+  }, [selectedCoins, selectedCoins]);
 
-  const handleSelectAllAs = useCallback(
+  const handleSelectAllAsCandidate = useCallback(
     (value) => {
       const selectedValue = convertSelectedValue(value);
-      const newCoins = coins.map((coin) => {
-        return { ...coin, must_select: selectedValue };
+      const newCoins = coinsToView.map((coin) => {
+        const { spent_by } = coin;
+        if (spent_by) {
+          return coin;
+        } else {
+          return { ...coin, must_select: false };
+        }
       });
-      setCoins(newCoins);
+      setCoinsToView(newCoins);
       setSelectAllTo(selectedValue);
     },
-    [coins],
+    [coinsToView],
   );
 
   const handleClearAllSelection = useCallback(() => {
-    const deselectedCoins = coins.map((coin) => {
+    const deselectedCoins = coinsToView.map((coin) => {
       return { ...coin, must_select: null };
     });
-    setCoins(deselectedCoins);
+    setCoinsToView(deselectedCoins);
     setSelectAllTo(null);
   }, [coins]);
 
   const hasAtLeastOneSelected = useMemo(() => {
-    const result = coins.map((coin) => {
+    const result = coinsToView?.map((coin) => {
       const { must_select } = coin;
       if (must_select !== undefined) {
         return 1;
@@ -75,12 +96,14 @@ const CoinControl = () => {
       return 0;
     });
     return result.find((select) => select === 1) || 0;
-  }, [coins]);
+  }, [coinsToView]);
 
   const handleClickCreateTx = async () => {
     setCookie("selectedCoins", JSON.stringify(selectedCoins));
     setCookie("totalAmount", JSON.stringify(totalAmount));
   };
+
+  const disableSelectAllAsCandidate = useCallback(() => {}, []);
 
   return (
     <div className="frame_padding flex flex-col gap-8">
@@ -94,7 +117,10 @@ const CoinControl = () => {
           >
             Ignore All
           </button>
-          <div className="main_button" onClick={() => handleSelectAllAs("0")}>
+          <div
+            className="main_button"
+            onClick={() => handleSelectAllAsCandidate("0")}
+          >
             Select all UTXOs as{" "}
             <strong className="capitalize">
               {COIN_SELECT_OPTION_CANDIDATE}
@@ -106,6 +132,7 @@ const CoinControl = () => {
         selectAllAs={selectAllAs}
         selectedCoins={selectedCoins}
         hasAtLeastOneSelected={hasAtLeastOneSelected}
+        setCoinsToView={setCoinsToView}
       />
       <div className="w-full flex justify-end pt-8">
         <div className="flex gap-4 items-center">

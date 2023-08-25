@@ -20,14 +20,14 @@ const SolutionTable = ({ solutions }) => {
   const [details, setDetails] = useState("");
   const handleBroadcast = useCallback((hex) => {
     POST(`http://localhost:8080/api/network/broadcast?tx=${hex}`).then(() =>
-      window.my_modal_2.showModal(),
+      window["my_modal_2"].showModal(),
     );
   }, []);
 
   const handleGetMoreDetails = useCallback((hex) => {
     GET(`http://localhost:8080/api/decode?tx=${hex}`)
       .then((r) => setDetails({ ...r }))
-      .then(() => setTimeout(window.my_modal_8.showModal(), 1500));
+      .then(() => setTimeout(() => window["my_modal_8"].showModal(), 1500));
   }, []);
   return (
     <>
@@ -48,18 +48,17 @@ const SolutionTable = ({ solutions }) => {
               const time = `${new Date(timestamp * 1000).getHours()}:${new Date(
                 timestamp * 1000,
               ).getMinutes()}`;
-              const txId = `${txid.substring(0, 6)}.....${txid.substring(
+              const txId = `${txid?.substring(0, 6)}.....${txid?.substring(
                 txid.length - 6,
               )}`;
-
               return (
                 <tr className="hover">
                   <td>{index}</td>
                   <td className="input_field">{time}</td>
                   <td className="input_field">{txId}</td>
-                  {request.algorithm ? (
+                  {request?.algorithm ? (
                     <td className="input_field capitalize">
-                      {request.algorithm.split("_").join(" ")}
+                      {request?.algorithm.split("_").join(" ")}
                     </td>
                   ) : (
                     <td className="input_field">--</td>

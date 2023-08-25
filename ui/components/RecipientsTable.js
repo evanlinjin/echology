@@ -41,7 +41,8 @@ const RecipientsTable = ({
                     id={index}
                     key={`amount-${index}`}
                     value={recipient.amount}
-                    type="number"
+                    type="text"
+                    pattern="[0-9]*"
                     className="input_field w-full"
                     onChange={onChangeRecipientAmount}
                     disabled={isDone === true}

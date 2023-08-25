@@ -1,8 +1,9 @@
 import SelectionDropdown from "@components/SelectionDropdown";
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import { convertSelectedValue } from "@app/coin-control/components/converter";
+import { useCoinContext } from "@app/context/coins";
 
-const TableRow = ({ coin, index, setCoins, coins }) => {
+const TableRow = ({ coin, index, setCoinsToView, coinsToView }) => {
   if (!coin) {
     return null;
   }
@@ -12,16 +13,17 @@ const TableRow = ({ coin, index, setCoins, coins }) => {
     (e) => {
       const selectedValue = convertSelectedValue(e.target.value);
 
-      const updatedCoins = coins.map((eachCoin) => {
-        if (eachCoin.outpoint !== outpoint) {
+      const updatedCoins = coinsToView.map((eachCoin) => {
+        const { outpoint: eachOutPoint } = eachCoin;
+        if (eachOutPoint !== outpoint) {
           return eachCoin;
         } else {
           return { ...eachCoin, must_select: selectedValue };
         }
       });
-      setCoins([...updatedCoins]);
+      setCoinsToView([...updatedCoins]);
     },
-    [coins],
+    [coinsToView],
   );
   const idFormatter = (id) => {
     if (!id) {
@@ -37,7 +39,7 @@ const TableRow = ({ coin, index, setCoins, coins }) => {
       <td>{index}</td>
       <td>
         <SelectionDropdown
-          selected={must_select}
+          mustSelect={must_select}
           onChange={handleChangeSelect}
         />
       </td>
@@ -54,4 +56,4 @@ const TableRow = ({ coin, index, setCoins, coins }) => {
     </tr>
   );
 };
-export default TableRow;
+export default memo(TableRow);

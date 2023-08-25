@@ -1,10 +1,10 @@
 "use client";
 import "../styles/global.css";
-
-import Link from "next/link";
-import { useState } from "react";
+import { memo } from "react";
+import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
-import { API_ROOT, GET } from "@utils/request";
+import { GET } from "@utils/request";
+import { useCoinContext } from "@app/context/coins";
 
 export function setCookie(name, value, expires) {
   if (expires) {
@@ -14,49 +14,54 @@ export function setCookie(name, value, expires) {
 }
 
 const WelcomePage = () => {
-  const [alias, setAlias] = useState("");
-
+  const router = useRouter();
+  const { alias, setAlias } = useCoinContext();
+  const handleClickEnter = async () => {
+    if (!alias) {
+      window["alias_empty_warning_modal"].showModal();
+    } else {
+      try {
+        setCookie("alias", alias);
+        const result = await GET(
+          `http://localhost:8080/api/wallet/${alias}/address`,
+        );
+        if (result.address) {
+          setCookie("address", result.address);
+        }
+        router.push("/coin-control");
+      } catch (error) {
+        console.error("An error occurred:", error);
+      }
+    }
+  };
   const handleChange = (e) => {
     const pattern = new RegExp("[^a-z0-9]+", "g");
     const value = e.target.value.replaceAll(pattern, "");
     setAlias(value);
   };
 
-  const handleClickEnter = async () => {
-    if (alias === "") {
-      window.my_modal_4.showModal();
-    }
-    setCookie("alias", alias);
-    GET(`http://localhost:8080/api/wallet/${alias}/address`).then((result) =>
-      setCookie("address", result.address),
-    );
-  };
   return (
-    <div className="flex flex-col gap-4 h-max w-max py-8 mx-8 my-8 mx-8">
+    <div className="flex flex-col gap-4 h-max w-max py-8 m-8">
       <span>Type Something To Get Started:</span>
-      <input
-        type="text"
-        placeholder="Type here"
-        maxLength="33"
-        className="input border border-gray-600 input-bordered rounded-none bg-gray-300 w-full"
-        value={alias}
-        onChange={handleChange}
-        pattern="[a-z0-9]"
-      />
-
-      <Link
-        href={alias ? "/coin-control " : "/"}
-        className="w-full"
-        onClick={handleClickEnter}
-      >
+      <form onSubmit={handleClickEnter} className="flex flex-col gap-4">
+        <input
+          type="text"
+          placeholder="Type here"
+          maxLength="33"
+          className="input border border-gray-600 input-bordered rounded-none bg-gray-300 w-full"
+          value={alias}
+          onChange={handleChange}
+          pattern="[a-z0-9]"
+        />
         <button
-          type="button"
+          type="submit"
           className="w-full btn btn-active rounded-none bg-black text-white"
+          onClick={handleClickEnter}
         >
           Enter
         </button>
-      </Link>
-      <dialog id="my_modal_4" className="modal">
+      </form>
+      <dialog id="alias_empty_warning_modal" className="modal">
         <form
           method="dialog"
           className="modal-box w-11/12 max-w-5xl rounded-none"
@@ -72,4 +77,4 @@ const WelcomePage = () => {
     </div>
   );
 };
-export default WelcomePage;
+export default memo(WelcomePage);

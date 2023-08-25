@@ -57,7 +57,6 @@ const SpentScenario = () => {
       `http://localhost:8080/api/wallet/${alias}/new_spend_scenario`,
       body,
     ).then((r) => {
-      console.log("r", r);
       setCookie("spentScenarioId", r.spend_scenario_id);
       setIsDone(true);
     });

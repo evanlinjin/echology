@@ -4,16 +4,22 @@ import {
   COIN_SELECT_OPTION_MUST_SPEND,
 } from "@app/coin-control/page";
 
-const SelectionDropdown = ({ onGlobalSelect, onChange }) => {
+const SelectionDropdown = ({ onGlobalSelect, onChange, mustSelect }) => {
   return (
     <select
       className="select select-bordered rounded-none main_background  whitespace-nowrap border border-black capitalize"
       onChange={onGlobalSelect || onChange}
-      defaultValue={0}
+      // defaultValue={mustSelect}
     >
-      <option value={1}>{COIN_SELECT_OPTION_MUST_SPEND}</option>
-      <option value={0}>{COIN_SELECT_OPTION_CANDIDATE}</option>
-      <option value={-1}>{COIN_SELECT_OPTION_IGNORED}</option>
+      <option selected={mustSelect === true} value={1}>
+        {COIN_SELECT_OPTION_MUST_SPEND}
+      </option>
+      <option selected={mustSelect === false} value={0}>
+        {COIN_SELECT_OPTION_CANDIDATE}
+      </option>
+      <option selected={mustSelect === null} value={-1}>
+        {COIN_SELECT_OPTION_IGNORED}
+      </option>
     </select>
   );
 };

@@ -12,6 +12,8 @@ export const CoinContextProvider = ({ children }) => {
   const [selectedCoins, setSelectedCoins] = useState(
     Cookies.get("selectedCoins") || [],
   );
+  const [coins, setCoins] = useState([]);
+  const [coinsToView, setCoinsToView] = useState(coins);
 
   useEffect(() => {
     setAlias(Cookies.get("alias"));
@@ -32,7 +34,17 @@ export const CoinContextProvider = ({ children }) => {
 
   return (
     <CoinContext.Provider
-      value={{ alias, setAlias, address, spentScenarioId, selectedCoins }}
+      value={{
+        alias,
+        setAlias,
+        address,
+        spentScenarioId,
+        selectedCoins,
+        coins,
+        setCoins,
+        coinsToView,
+        setCoinsToView,
+      }}
     >
       {children}
     </CoinContext.Provider>

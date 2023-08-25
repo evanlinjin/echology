@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import { useCallback } from "react";
 
 const CheckboxField = ({
   label,
@@ -14,8 +14,8 @@ const CheckboxField = ({
     onChange(e);
   }, []);
   return (
-    <div className="form-control gap-4 w-full">
-      <label className="label cursor-pointer gap-4 items-center justify-start">
+    <div className="form-control gap-2 w-full">
+      <label className="label cursor-pointer gap-2 items-center justify-start">
         <input
           type="checkbox"
           checked={checked}
@@ -25,7 +25,7 @@ const CheckboxField = ({
         />
         <span className="label-text whitespace-nowrap">{label}</span>
       </label>
-      <div className="flex gap-4 items-center">
+      <div className="flex gap-2 items-center flex-wrap">
         <input
           type="number"
           placeholder="Type here"

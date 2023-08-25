@@ -1,10 +1,11 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { GET } from "@utils/request";
-import { RiBitCoinLine, RiFileCopyLine } from "react-icons/ri";
+import { RiBitCoinLine } from "react-icons/ri";
 import { SlRefresh } from "react-icons/sl";
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import { useCoinContext } from "@app/context/coins";
+import PrintMoneyDialog from "@components/PrintMoneyDialog";
 
 const Nav = () => {
   const [headerInfo, setHeaderInfo] = useState(undefined);
@@ -22,21 +23,6 @@ const Nav = () => {
   }, []);
 
   const handleRefresh = useCallback(() => window.location.reload(), []);
-
-  const handleGetFreeMoney = useCallback(
-    async (amount) => {
-      try {
-        await GET(
-          `http://localhost:8080/api/faucet?address=${address}&amount=${amount}`,
-        );
-        setTimeout(handleRefresh, 3000);
-      } catch (error) {
-        console.error("An error occurred:", error);
-        // Handle the error (show an error message, etc.)
-      }
-    },
-    [address, handleRefresh],
-  );
 
   return (
     <>
@@ -70,65 +56,23 @@ const Nav = () => {
           </div>
         </div>
         {address && (
-          <div className="flex flex-wrap gap-3 self-start items-center">
+          <div className="flex flex-wrap self-start items-center">
             <span className="capitalize">Address:</span>
-            <span>{address}</span>
 
             <CopyToClipboard text={address} onCopy={() => setShowCopied(true)}>
-              <div
-                className={`hover:cursor-pointer px-2 py-1 item_padding rounded-none btn ${
+              <span
+                className={`hover:cursor-pointer ${
                   showCopied && "hover:tooltip hover:tooltip-open"
-                } hover:bg-gray-300`}
+                } hover:bg-gray-200 item_padding`}
                 data-tip="Copied!"
               >
-                <RiFileCopyLine fontSize={24} />
-              </div>
+                {address}
+              </span>
             </CopyToClipboard>
           </div>
         )}
       </div>
-      <div>
-        <input
-          type="checkbox"
-          id="free_money_dialog"
-          className="modal-toggle"
-        />
-        <div className="modal">
-          <div className="modal-box rounded-none">
-            <h3 className="text-lg font-bold">Get Free Money!</h3>
-            <p className="py-4">Please select the amount you want:</p>
-            <div className="flex gap-4">
-              <button
-                className="black_button w-full"
-                onClick={() => handleGetFreeMoney(1000)}
-              >
-                1000
-              </button>
-              <button
-                className="black_button w-full"
-                onClick={() => handleGetFreeMoney(2000)}
-              >
-                2000
-              </button>
-              <button
-                className="black_button w-full"
-                onClick={() => handleGetFreeMoney(3000)}
-              >
-                3000
-              </button>
-              <button
-                className="black_button w-full"
-                onClick={() => handleGetFreeMoney(4000)}
-              >
-                4000
-              </button>
-            </div>
-          </div>
-          <label className="modal-backdrop" htmlFor="free_money_dialog">
-            Close
-          </label>
-        </div>
-      </div>
+      <PrintMoneyDialog />
     </>
   );
 };
