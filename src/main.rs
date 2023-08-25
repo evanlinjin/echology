@@ -131,19 +131,27 @@ async fn faucet(req: Request<Echology>) -> tide::Result {
     struct Query {
         pub address: Address,
         pub amount: u64,
+        pub count: usize,
     }
     let q: Query = req.query()?;
-    let txid = req.state().bitcoind.client.send_to_address(
-        &q.address,
-        Amount::from_sat(q.amount),
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-    )?;
-    Ok(json!({ "txid": txid }).into())
+
+    let client = &req.state().bitcoind.client;
+    let txids = core::iter::repeat_with(|| {
+        client.send_to_address(
+            &q.address,
+            Amount::from_sat(q.amount),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        )
+    })
+    .take(q.count)
+    .collect::<Result<Vec<_>, _>>()?;
+
+    Ok(json!({ "txids": txids }).into())
 }
 
 async fn wallet_address(req: Request<Echology>) -> tide::Result {

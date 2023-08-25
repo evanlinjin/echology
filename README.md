@@ -51,12 +51,17 @@ Response Body:
 }
 ```
 
-### GET `/faucet?address={address}&amount={amount}`
+### GET `/faucet?address={address}&amount={amount}&count={count}`
+
+* `amount` values: 1000, 50_000, 100_000
+* `count` values: 1..=10
 
 Response Body:
 ```json
 {
-    "txid": "eb7e8d79456004d8e7244d519005f8667ea1ea19f2e03897b5738d1110be1b54",
+    "txids": [
+        "eb7e8d79456004d8e7244d519005f8667ea1ea19f2e03897b5738d1110be1b54"
+    ]
 }
 ```
 
