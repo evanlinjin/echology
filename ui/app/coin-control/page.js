@@ -28,35 +28,34 @@ const CoinControl = () => {
   const [selectAllAs, setSelectAllTo] = useState(undefined);
 
   useEffect(() => {
-    if (!alias) {
-      Cookies.get("alias");
-    }
-    GET(`http://localhost:8080/api/wallet/${alias}/coins`).then((result) => {
-      const data = result.coins;
-      let spentCoins = [];
-      let unspentCoins = [];
-      const coinsWithSelection = data.map((coin) => ({
-        ...coin,
-        must_select: undefined,
-      }));
-      setCoins(coinsWithSelection);
+    GET(`http://localhost:8080/api/wallet/${Cookies.get("alias")}/coins`).then(
+      (result) => {
+        const data = result.coins;
+        let spentCoins = [];
+        let unspentCoins = [];
+        const coinsWithSelection = data.map((coin) => ({
+          ...coin,
+          must_select: undefined,
+        }));
+        setCoins(coinsWithSelection);
 
-      data.forEach((coin) => {
-        const { spent_by } = coin;
-        if (!spent_by) {
-          unspentCoins.push({ ...coin, must_select: false });
-        } else {
-          spentCoins.push({ ...coin, must_select: null });
-        }
-      });
-      const sortedSpentCoins = spentCoins.sort((a, b) => {
-        const txidA = a.spent_by ? a.spent_by.txid : "";
-        const txidB = b.spent_by ? b.spent_by.txid : "";
-        return txidA.localeCompare(txidB);
-      });
-      setCoins([...coinsWithSelection]);
-      setCoinsToView([...unspentCoins, ...sortedSpentCoins]);
-    });
+        data.forEach((coin) => {
+          const { spent_by } = coin;
+          if (!spent_by) {
+            unspentCoins.push({ ...coin, must_select: false });
+          } else {
+            spentCoins.push({ ...coin, must_select: null });
+          }
+        });
+        const sortedSpentCoins = spentCoins.sort((a, b) => {
+          const txidA = a.spent_by ? a.spent_by.txid : "";
+          const txidB = b.spent_by ? b.spent_by.txid : "";
+          return txidA.localeCompare(txidB);
+        });
+        setCoins([...coinsWithSelection]);
+        setCoinsToView([...unspentCoins, ...sortedSpentCoins]);
+      },
+    );
   }, [setCoinsToView, setCoins, alias]);
 
   useEffect(() => {
