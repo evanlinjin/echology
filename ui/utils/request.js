@@ -9,9 +9,14 @@ export async function POST(url, body) {
       method: "POST",
       body: JSON.stringify({ ...body }),
     });
+
+    if (!response.ok) {
+      const responseText = await response.text();
+      return JSON.parse(responseText);
+    }
     return await response.json();
   } catch (error) {
-    alert(error);
+    throw error;
   }
 }
 

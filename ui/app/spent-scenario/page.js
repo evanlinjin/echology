@@ -11,10 +11,17 @@ import { POST } from "@utils/request";
 import { useCoinContext } from "@app/context/coins";
 import Copy from "@components/Copy";
 import { setCookie } from "@utils/setCookie";
+import Cookies from "js-cookie";
 
 const SpentScenario = () => {
-  const { alias, spentScenarioId, selectedCoins, address, selectedAmount } =
-    useCoinContext();
+  const {
+    alias,
+    spentScenarioId,
+    selectedCoins,
+    address,
+    selectedAmount,
+    setErrorMessage,
+  } = useCoinContext();
   const [solutions, setSolution] = useState([]);
   const [recipients, setRecipients] = useState([]);
   const [coinSelectionParameters, setCoinSelectionParameters] = useState({
@@ -49,12 +56,20 @@ const SpentScenario = () => {
         ? coinSelectionParameters.longTermFreeRate
         : undefined,
     };
+
     POST(
-      `http://localhost:8080/api/wallet/${alias}/new_spend_scenario`,
+      `http://localhost:8080/api/wallet/${Cookies.get(
+        "alias",
+      )}/new_spend_scenario`,
       body,
-    ).then((r) => {
-      setCookie("spentScenarioId", r.spend_scenario_id);
-      setIsDone(true);
+    ).then((result) => {
+      if (result.error) {
+        setErrorMessage(result.error);
+      }
+      if (result.spend_scenario_id) {
+        setCookie("spentScenarioId", result.spend_scenario_id);
+        setIsDone(true);
+      }
     });
   }, [
     setCookie,
@@ -109,11 +124,11 @@ const SpentScenario = () => {
     if (selectionAlgorithm === "select_until_finished") {
       body = bodySuf;
     }
-    POST(`http://localhost:8080/api/wallet/${alias}/new_solution`, body).then(
-      (result) => {
+    POST(`http://localhost:8080/api/wallet/${alias}/new_solution`, body)
+      .then((result) => {
         setSolution([...solutions, { ...result }]);
-      },
-    );
+      })
+      .catch((error) => console.log("error", error));
   }, [
     selectionAlgorithm,
     bnbParameters,
@@ -160,7 +175,6 @@ const SpentScenario = () => {
     setIsDone(false);
     setSolution([]);
   }, [setIsDone, setSolution]);
-
   console.log("recipients", recipients);
   return (
     <div className="w-full flex gap-6 flex-col frame_padding">
@@ -242,6 +256,11 @@ const SpentScenario = () => {
           </div>
           <div className="w-full flex justify-end">
             <button
+              disabled={
+                recipients.length === 0 ||
+                recipients[0]?.address === "" ||
+                recipients[0]?.amount === 0
+              }
               className="main_button"
               onClick={
                 isDone === true ? handleSwitchEditMode : handlePostNewSpent

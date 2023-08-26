@@ -16,6 +16,7 @@ export const CoinContextProvider = ({ children }) => {
 
   const [spentScenarioId, setSpentScenarioId] = useState(undefined);
 
+  const [errorMessage, setErrorMessage] = useState(undefined);
   const router = useRouter();
 
   useEffect(() => {
@@ -39,6 +40,7 @@ export const CoinContextProvider = ({ children }) => {
       : [];
     setSelectedCoins(selectedCoins);
   }, [setSelectedCoins]);
+
   return (
     <CoinContext.Provider
       value={{
@@ -54,6 +56,8 @@ export const CoinContextProvider = ({ children }) => {
         setSelectedAmount,
         setSelectedCoins,
         spentScenarioId,
+        setErrorMessage,
+        errorMessage,
       }}
     >
       {children}
