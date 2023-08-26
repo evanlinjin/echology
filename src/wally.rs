@@ -173,13 +173,11 @@ impl Wally {
             network: Network::Regtest,
             inner: SecretKey::from_slice(&phrase_hash).expect("32 bytes, within curve order"),
         };
-        println!("sk: {}", sk.to_string());
+        println!("sk: {}", sk);
 
         let secp = Secp256k1::default();
-        let (descriptor, keymap) = Descriptor::<DescriptorPublicKey>::parse_descriptor(
-            &secp,
-            &format!("tr({})", sk.to_string()),
-        )?;
+        let (descriptor, keymap) =
+            Descriptor::<DescriptorPublicKey>::parse_descriptor(&secp, &format!("tr({})", sk))?;
         let spk = descriptor.at_derivation_index(0).script_pubkey();
 
         let mut indexed_tx_graph =
@@ -309,11 +307,9 @@ pub fn create_spend_solution(
                 candidates.sort_by_key(|(_, txo)| std::cmp::Reverse(txo.txout.value))
             }
             CsCandidateOrder::SmallestFirst => candidates.sort_by_key(|(_, txo)| txo.txout.value),
-            CsCandidateOrder::OldestFirst => {
-                candidates.sort_by_key(|(_, txo)| txo.chain_position.clone())
-            }
+            CsCandidateOrder::OldestFirst => candidates.sort_by_key(|(_, txo)| txo.chain_position),
             CsCandidateOrder::NewestFirst => {
-                candidates.sort_by_key(|(_, txo)| std::cmp::Reverse(txo.chain_position.clone()))
+                candidates.sort_by_key(|(_, txo)| std::cmp::Reverse(txo.chain_position))
             }
         }
     }
