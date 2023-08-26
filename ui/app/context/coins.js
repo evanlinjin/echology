@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 const CoinContext = createContext({});
 
 export const CoinContextProvider = ({ children }) => {
-  const [alias, setAlias] = useState(undefined);
   const [address, setAddress] = useState(undefined);
 
   const [coins, setCoins] = useState([]);
@@ -18,10 +17,6 @@ export const CoinContextProvider = ({ children }) => {
   const [spentScenarioId, setSpentScenarioId] = useState(undefined);
 
   const router = useRouter();
-
-  useEffect(() => {
-    setAlias(Cookies.get("alias"));
-  }, []);
 
   useEffect(() => {
     setAddress(Cookies.get("address"));
@@ -48,14 +43,12 @@ export const CoinContextProvider = ({ children }) => {
     <CoinContext.Provider
       value={{
         address,
-        alias,
         coins,
         coinsToView,
         router,
         selectedAmount,
         selectedCoins,
         setAddress,
-        setAlias,
         setCoins,
         setCoinsToView,
         setSelectedAmount,
