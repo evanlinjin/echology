@@ -1,7 +1,6 @@
 import SelectionDropdown from "@components/SelectionDropdown";
 import { memo, useCallback } from "react";
 import { convertSelectedValue } from "@app/coin-control/components/converter";
-import { useCoinContext } from "@app/context/coins";
 
 const TableRow = ({ coin, index, setCoinsToView, coinsToView }) => {
   if (!coin) {

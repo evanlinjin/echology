@@ -30,10 +30,7 @@ const SpentScenario = () => {
   const [excessStrategy, setExcessStrategy] = useState("best_strategy");
   const [candidateOrder, setCandidateOrder] = useState("largest_first");
   const [isDone, setIsDone] = useState(undefined);
-
   const [useLongTerm, setUseLongTerm] = useState(false);
-
-  // let totalAmount = JSON.parse(Cookies.get("selectedAmount") || 0);
 
   const newRecipient = { address: "", amount: 0 };
   const handleAddRecipientsClick = useCallback(() => {
