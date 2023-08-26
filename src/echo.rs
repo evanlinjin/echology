@@ -134,7 +134,7 @@ impl Echology {
                     }
                 }
 
-                return tide::Result::Ok(());
+                tide::Result::Ok(())
             })
         };
 
