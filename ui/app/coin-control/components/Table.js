@@ -10,14 +10,21 @@ import {
   TABLE_HEAD_VALUE_SPENT_BY,
 } from "@utils/constants";
 import { RiBitCoinLine } from "react-icons/ri";
+import { useMemo } from "react";
 
 const Table = ({ selectAllAs }) => {
   const { setCoinsToView, coinsToView } = useCoinContext();
+
+  const hasSpentCoins = useMemo(
+    () => coinsToView.find((coin) => coin["spent_by"] !== null),
+    [coinsToView],
+  );
+
   const headers = [
     TABLE_HEAD_VALUE_OUTPOINTS,
     TABLE_HEAD_VALUE_AMOUNT,
     TABLE_HEAD_VALUE_CONFIRMATION,
-    TABLE_HEAD_VALUE_SPENT_BY,
+    { ...TABLE_HEAD_VALUE_SPENT_BY, sort: hasSpentCoins },
   ];
 
   return (
