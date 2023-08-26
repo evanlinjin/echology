@@ -1,38 +1,49 @@
 "use client";
 import { RiSortAsc, RiSortDesc } from "react-icons/ri";
 import { memo, useCallback, useState } from "react";
+
+import { useCoinContext } from "@app/context/coins";
+import TableHead from "@components/TableHead";
 import {
   SORT_BY_ASC,
   SORT_BY_DESC,
   TABLE_HEAD_VALUE_AMOUNT,
   TABLE_HEAD_VALUE_OUTPOINTS,
   TABLE_HEAD_VALUE_SPENT_BY,
-} from "@app/coin-control/components/Table";
-import { useCoinContext } from "@app/context/coins";
-import TableHead from "@components/TableHead";
+} from "@utils/constants";
 
 const Index = ({ label, desc, sort }) => {
   const { coins, setCoinsToView, coinsToView } = useCoinContext();
-  const [sortBy, setSortBy] = useState(SORT_BY_ASC);
+  const [sortByAsc, setSortByAsc] = useState(true);
 
-  const handleSortByAmount = useCallback(
-    (sortBy) => {
-      if (sortBy === SORT_BY_ASC) {
-        const result = [...coins].sort((a, b) => b.amount - a.amount);
-        setCoinsToView(result);
+  const handleSortOutPoints = useCallback(() => {
+    const result = coinsToView.sort((a, b) => {
+      const op1 = a["outpoint"];
+      const op2 = b["outpoint"];
+      if (sortByAsc) {
+        return op1.localeCompare(op2);
+      } else {
+        return op2.localeCompare(op1);
       }
-      if (sortBy === SORT_BY_DESC) {
-        const result = [...coins].sort((a, b) => a.amount - b.amount);
-        setCoinsToView(result);
-      }
-    },
-    [setCoinsToView, coins],
-  );
+    });
+    setCoinsToView([...result]);
+  }, [setCoinsToView, coins, sortByAsc]);
 
-  const handleSortBySpentId = useCallback((sortBy) => {
+  const handleSortByAmount = useCallback(() => {
+    const result = coinsToView.sort((a, b) => {
+      if (sortByAsc) {
+        return a.amount - b.amount;
+      } else {
+        return b.amount - a.amount;
+      }
+    });
+    setCoinsToView([...result]);
+  }, [setCoinsToView, coinsToView, sortByAsc]);
+
+  const handleSortBySpentId = useCallback(() => {
     let spentCoins = [];
     let unspentCoins = [];
-    coins.forEach((coin) => {
+    coinsToView.forEach((coin) => {
       const { spent_by } = coin;
       if (!spent_by) {
         unspentCoins.push({ ...coin, must_select: false });
@@ -44,43 +55,44 @@ const Index = ({ label, desc, sort }) => {
       const txidA = a.spent_by ? a.spent_by.txid : "";
       const txidB = b.spent_by ? b.spent_by.txid : "";
 
-      if (sortBy === SORT_BY_ASC) {
+      if (sortByAsc) {
         return txidA.localeCompare(txidB);
-      }
-      if (sortBy === SORT_BY_DESC) {
+      } else {
         return txidB.localeCompare(txidA);
       }
     });
     setCoinsToView([...unspentCoins, ...sortedSpentCoins]);
   }, []);
 
-  let handleSort;
-  switch (label) {
-    case TABLE_HEAD_VALUE_OUTPOINTS:
-      handleSort = "";
-      break;
-    case TABLE_HEAD_VALUE_SPENT_BY:
-      handleSort = handleSortBySpentId;
-      break;
-    case TABLE_HEAD_VALUE_AMOUNT:
-      handleSort = handleSortByAmount;
-      break;
-    default:
-  }
-
+  const handleSort = () => {
+    switch (label) {
+      case TABLE_HEAD_VALUE_OUTPOINTS.label:
+        handleSortOutPoints();
+        break;
+      case TABLE_HEAD_VALUE_SPENT_BY.label:
+        handleSortBySpentId();
+        break;
+      case TABLE_HEAD_VALUE_AMOUNT.label:
+        handleSortByAmount();
+        return;
+      default:
+    }
+  };
   return (
     <TableHead
       label={label}
       desc={desc}
       sort={
-        <button
-          onClick={() => {
-            handleSort(sortBy === SORT_BY_ASC ? SORT_BY_DESC : SORT_BY_ASC);
-            setSortBy(sortBy === SORT_BY_ASC ? SORT_BY_DESC : SORT_BY_ASC);
-          }}
-        >
-          {sortBy === SORT_BY_ASC ? <RiSortDesc /> : <RiSortAsc />}
-        </button>
+        sort && (
+          <button
+            onClick={() => {
+              setSortByAsc((prev) => !prev);
+              handleSort(sortByAsc);
+            }}
+          >
+            {sortByAsc ? <RiSortDesc /> : <RiSortAsc />}
+          </button>
+        )
       }
     ></TableHead>
   );
