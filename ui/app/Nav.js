@@ -1,13 +1,11 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { GET } from "@utils/request";
-import { RiBitCoinFill } from "react-icons/ri";
 import { SlRefresh } from "react-icons/sl";
 import { useCoinContext } from "@app/context/coins";
 import PrintMoneyDialog from "@components/PrintMoneyDialog";
 import Copy from "@components/Copy";
 import Cookies from "@node_modules/js-cookie/dist/js.cookie.mjs";
-import { LiaBitcoin } from "@node_modules/react-icons/lia";
 import BitcoinButton from "@components/BitcoinButton";
 
 const Nav = () => {

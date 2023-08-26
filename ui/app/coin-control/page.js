@@ -6,7 +6,6 @@ import { useCoinContext } from "@app/context/coins";
 import { GET } from "@utils/request";
 import { setCookie } from "@utils/setCookie";
 import Cookies from "@node_modules/js-cookie/dist/js.cookie.mjs";
-import { RiBitCoinFill } from "@node_modules/react-icons/ri";
 import BitcoinButton from "@components/BitcoinButton";
 
 export const COIN_SELECT_OPTION_CANDIDATE = "candidate";
@@ -133,7 +132,8 @@ const CoinControl = () => {
           >
             Ignore All
           </button>
-          <div
+          <button
+            disabled={coinsToView.length === 0}
             className="main_button"
             onClick={() => handleSelectAllAsCandidate("0")}
           >
@@ -141,7 +141,7 @@ const CoinControl = () => {
             <strong className="capitalize">
               {COIN_SELECT_OPTION_CANDIDATE}
             </strong>
-          </div>
+          </button>
         </div>
       </div>
       {hasCoins ? (

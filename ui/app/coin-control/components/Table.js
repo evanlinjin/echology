@@ -1,5 +1,5 @@
 "use client";
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import TableHead from "@app/coin-control/components/TableHead";
 import TableRow from "@app/coin-control/components/TableRow";
 import { useCoinContext } from "@app/context/coins";
@@ -9,8 +9,6 @@ import {
   TABLE_HEAD_VALUE_OUTPOINTS,
   TABLE_HEAD_VALUE_SPENT_BY,
 } from "@utils/constants";
-import { RiBitCoinLine } from "react-icons/ri";
-import { useMemo } from "react";
 import BitcoinButton from "@components/BitcoinButton";
 
 const Table = ({ selectAllAs }) => {
