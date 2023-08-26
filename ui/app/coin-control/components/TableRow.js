@@ -33,7 +33,7 @@ const TableRow = ({ coin, index, setCoinsToView, coinsToView }) => {
   };
 
   const formattedOutPoint = idFormatter(outpoint);
-  const formattedTxid = spent_by && idFormatter(spent_by.txid);
+  const formattedTxid = spent_by && idFormatter(spent_by["txid"]);
   return (
     <tr className="hover">
       <td>{index}</td>
@@ -48,7 +48,7 @@ const TableRow = ({ coin, index, setCoinsToView, coinsToView }) => {
       <td className="input_field text-center">{confirmations}</td>
       {spent_by ? (
         <td className="input_field">
-          {formattedTxid} / {spent_by.confirmations}
+          {formattedTxid} / {spent_by["confirmations"]}
         </td>
       ) : (
         <td className="input_field text-center">/</td>

@@ -50,8 +50,8 @@ const Index = ({ label, desc, sort }) => {
       }
     });
     const sortedSpentCoins = spentCoins.sort((a, b) => {
-      const txidA = a.spent_by ? a.spent_by.txid : "";
-      const txidB = b.spent_by ? b.spent_by.txid : "";
+      const txidA = a["spent_by"] ? a["spent_by"]["txid"] : "";
+      const txidB = b["spent_by"] ? b["spent_by"]["txid"] : "";
 
       if (sortByAsc) {
         return txidA.localeCompare(txidB);
@@ -92,7 +92,7 @@ const Index = ({ label, desc, sort }) => {
           </button>
         )
       }
-    ></TableHead>
+    />
   );
 };
 export default memo(Index);
