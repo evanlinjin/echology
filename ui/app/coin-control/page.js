@@ -6,6 +6,7 @@ import { useCoinContext } from "@app/context/coins";
 import { GET } from "@utils/request";
 import { setCookie } from "@utils/setCookie";
 import Cookies from "@node_modules/js-cookie/dist/js.cookie.mjs";
+import { RiBitCoinFill } from "@node_modules/react-icons/ri";
 
 export const COIN_SELECT_OPTION_CANDIDATE = "candidate";
 export const COIN_SELECT_OPTION_IGNORED = "ignored";
@@ -117,9 +118,10 @@ const CoinControl = () => {
     setCookie("selectedCoins", JSON.stringify(selectedCoins));
     setCookie("selectedAmount", JSON.stringify(selectedAmount));
   };
+  const hasCoins = coinsToView && coinsToView.length > 0;
 
   return (
-    <div className="frame_padding flex flex-col gap-8">
+    <div className="frame_padding flex flex-col h-full gap-8">
       <div className="flex justify-between w-full items-end ">
         <div className="page_title">Coin Control</div>
         <div className="flex gap-10">
@@ -141,12 +143,27 @@ const CoinControl = () => {
           </div>
         </div>
       </div>
-      <Table
-        selectAllAs={selectAllAs}
-        selectedCoins={selectedCoins}
-        hasAtLeastOneSelected={hasAtLeastOneSelected}
-        setCoinsToView={setCoinsToView}
-      />
+      {hasCoins ? (
+        <Table
+          selectAllAs={selectAllAs}
+          selectedCoins={selectedCoins}
+          hasAtLeastOneSelected={hasAtLeastOneSelected}
+          setCoinsToView={setCoinsToView}
+        />
+      ) : (
+        <div className="w-full text-center h-full grid place-items-center">
+          <span>no money yet...</span>
+          <div className="flex flex-col gap-10">
+            <label
+              htmlFor="free_money_dialog"
+              className="btn btn-ghost hover:bg-transparent text-[#F7931A]"
+            >
+              <RiBitCoinFill fontSize={70} />
+            </label>
+            <span>click to print</span>
+          </div>
+        </div>
+      )}
       <div className="w-full flex justify-end pt-8">
         <div className="flex gap-4 items-center">
           <span className="font-medium whitespace-nowrap">

@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { GET } from "@utils/request";
-import { RiBitCoinLine } from "react-icons/ri";
+import { RiBitCoinFill } from "react-icons/ri";
 import { SlRefresh } from "react-icons/sl";
 import { useCoinContext } from "@app/context/coins";
 import PrintMoneyDialog from "@components/PrintMoneyDialog";
@@ -34,9 +34,9 @@ const Nav = () => {
             <div className="avatar">
               <label
                 htmlFor="free_money_dialog"
-                className="btn nav_button_square"
+                className="btn btn-ghost hover:bg-transparent text-[#F7931A]"
               >
-                <RiBitCoinLine fontSize={56} />
+                <RiBitCoinFill fontSize={70} />
               </label>
             </div>
           </div>

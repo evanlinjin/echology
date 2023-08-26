@@ -44,7 +44,7 @@
 }
 
 .rating li:hover {
-    background: #ff94e0;
+    background: #F7931A;
     color: #fff;
 
     & label {
@@ -57,7 +57,7 @@
 }
 
 [type="radio"]:checked ~ label {
-    background: #ff94e0;
+    background: #F7931A;
     color: #fff;
 }
 
@@ -155,10 +155,6 @@
     @apply flex justify-between items-center;
 }
 
-/*navbar*/
-.nav_link {
-    @apply text-body2 px-2 py-4 font-ibmPlexMono uppercase text-gray-500 hover:text-primary-400 font-medium;
-}
 
 /*typography*/
 .h1_ibmPlexMono {

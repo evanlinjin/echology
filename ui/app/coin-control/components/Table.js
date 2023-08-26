@@ -9,6 +9,7 @@ import {
   TABLE_HEAD_VALUE_OUTPOINTS,
   TABLE_HEAD_VALUE_SPENT_BY,
 } from "@utils/constants";
+import { RiBitCoinLine } from "react-icons/ri";
 
 const Table = ({ selectAllAs }) => {
   const { setCoinsToView, coinsToView } = useCoinContext();
@@ -35,17 +36,31 @@ const Table = ({ selectAllAs }) => {
           ))}
         </tr>
       </thead>
+      {coinsToView.length === 0 && (
+        <div className="w-full">
+          no money...
+          <div className="avatar">
+            <label
+              htmlFor="free_money_dialog"
+              className="btn nav_button_square"
+            >
+              <RiBitCoinLine fontSize={56} />
+            </label>
+          </div>
+        </div>
+      )}
       <tbody>
-        {coinsToView.map((coin, index) => (
-          <TableRow
-            key={index}
-            coin={coin}
-            index={index}
-            globalSelect={selectAllAs}
-            setCoinsToView={setCoinsToView}
-            coinsToView={coinsToView}
-          />
-        ))}
+        {coinsToView.length > 0 &&
+          coinsToView.map((coin, index) => (
+            <TableRow
+              key={index}
+              coin={coin}
+              index={index}
+              globalSelect={selectAllAs}
+              setCoinsToView={setCoinsToView}
+              coinsToView={coinsToView}
+            />
+          ))}
       </tbody>
     </table>
   );
