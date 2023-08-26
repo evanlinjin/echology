@@ -5,6 +5,7 @@ import { convertSelectedValue } from "@app/coin-control/components/converter";
 import { useCoinContext } from "@app/context/coins";
 import { GET } from "@utils/request";
 import { setCookie } from "@utils/setCookie";
+import Cookies from "@node_modules/js-cookie/dist/js.cookie.mjs";
 
 export const COIN_SELECT_OPTION_CANDIDATE = "candidate";
 export const COIN_SELECT_OPTION_IGNORED = "ignored";
@@ -27,7 +28,9 @@ const CoinControl = () => {
   const [selectAllAs, setSelectAllTo] = useState(undefined);
 
   useEffect(() => {
-    if (!alias) return;
+    if (!alias) {
+      Cookies.get("alias");
+    }
     GET(`http://localhost:8080/api/wallet/${alias}/coins`).then((result) => {
       const data = result.coins;
       let spentCoins = [];
@@ -54,7 +57,7 @@ const CoinControl = () => {
       setCoins([...coinsWithSelection]);
       setCoinsToView([...unspentCoins, ...sortedSpentCoins]);
     });
-  }, []);
+  }, [setCoinsToView, setCoins, alias]);
 
   useEffect(() => {
     const filteredCoins = coinsToView
