@@ -3,15 +3,14 @@ import { useCallback, useEffect, useState } from "react";
 import { GET } from "@utils/request";
 import { RiBitCoinLine } from "react-icons/ri";
 import { SlRefresh } from "react-icons/sl";
-import { CopyToClipboard } from "react-copy-to-clipboard";
 import { useCoinContext } from "@app/context/coins";
 import PrintMoneyDialog from "@components/PrintMoneyDialog";
 import Copy from "@components/Copy";
+import Cookies from "@node_modules/js-cookie/dist/js.cookie.mjs";
 
 const Nav = () => {
   const [headerInfo, setHeaderInfo] = useState(undefined);
-  const [showCopied, setShowCopied] = useState(false);
-  const { address } = useCoinContext();
+  const { address, setAddress } = useCoinContext();
 
   useEffect(() => {
     GET("http://localhost:8080/api/network/stats").then((result) => {
@@ -22,9 +21,11 @@ const Nav = () => {
       setHeaderInfo(data);
     });
   }, []);
+  useEffect(() => {
+    setAddress(Cookies.get("address"));
+  }, [setAddress]);
 
   const handleRefresh = useCallback(() => window.location.reload(), []);
-  console.log("address", address);
   return (
     <>
       <div className="min-h-fit w-full flex gap-5 frame_padding border-b border-gray-700 justify-between">

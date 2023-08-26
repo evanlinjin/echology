@@ -21,7 +21,11 @@ const RecipientsTable = ({
           <tr>
             <th>-</th>
             {headers.map((header) => (
-              <TableHead label={header.label} desc={header.desc} />
+              <TableHead
+                label={header.label}
+                desc={header.desc}
+                key={header.label}
+              />
             ))}
             <th>-</th>
           </tr>

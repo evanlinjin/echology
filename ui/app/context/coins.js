@@ -1,49 +1,66 @@
 "use client";
-
 import { createContext, useContext, useEffect, useState } from "react";
 import Cookies from "@node_modules/js-cookie/dist/js.cookie.mjs";
+import { useRouter } from "next/navigation";
 
 const CoinContext = createContext({});
 
 export const CoinContextProvider = ({ children }) => {
   const [alias, setAlias] = useState(undefined);
   const [address, setAddress] = useState(undefined);
-  const [spentScenarioId, setSpentScenarioId] = useState(undefined);
-  const [selectedCoins, setSelectedCoins] = useState(
-    Cookies.get("selectedCoins") || [],
-  );
+
   const [coins, setCoins] = useState([]);
   const [coinsToView, setCoinsToView] = useState(coins);
 
+  const [selectedAmount, setSelectedAmount] = useState(0);
+  const [selectedCoins, setSelectedCoins] = useState([]);
+
+  const [spentScenarioId, setSpentScenarioId] = useState(undefined);
+
+  const router = useRouter();
+
   useEffect(() => {
     setAlias(Cookies.get("alias"));
+  }, []);
+
+  useEffect(() => {
     setAddress(Cookies.get("address"));
   }, []);
 
   useEffect(() => {
-    const id =
-      Cookies.get("spentScenarioId") !== "undefined"
-        ? Cookies.get("spentScenarioId")
-        : undefined;
-    setSpentScenarioId(id);
-  });
-
-  useEffect(() => {
-    setSelectedCoins(JSON.parse(Cookies.get("selectedCoins") || []));
+    setSelectedAmount(Cookies.get("selectedAmount"));
   }, []);
 
+  useEffect(() => {
+    const id = Cookies.get("spentScenarioId")
+      ? Cookies.get("spentScenarioId")
+      : undefined;
+    setSpentScenarioId(id);
+  }, [setSpentScenarioId]);
+
+  useEffect(() => {
+    const selectedCoins = Cookies.get("selectedCoins")
+      ? JSON.parse(Cookies.get("selectedCoins"))
+      : [];
+    setSelectedCoins(selectedCoins);
+  }, [setSelectedCoins]);
   return (
     <CoinContext.Provider
       value={{
-        alias,
-        setAlias,
         address,
-        spentScenarioId,
-        selectedCoins,
+        alias,
         coins,
-        setCoins,
         coinsToView,
+        router,
+        selectedAmount,
+        selectedCoins,
+        setAddress,
+        setAlias,
+        setCoins,
         setCoinsToView,
+        setSelectedAmount,
+        setSelectedCoins,
+        spentScenarioId,
       }}
     >
       {children}

@@ -2,30 +2,42 @@
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import Table from "@app/coin-control/components/Table";
 import { convertSelectedValue } from "@app/coin-control/components/converter";
-import Link from "next/link";
-import { setCookie } from "@app/page";
 import { useCoinContext } from "@app/context/coins";
 import { GET } from "@utils/request";
+import { setCookie } from "@utils/setCookie";
 
 export const COIN_SELECT_OPTION_CANDIDATE = "candidate";
 export const COIN_SELECT_OPTION_IGNORED = "ignored";
 export const COIN_SELECT_OPTION_MUST_SPEND = "must spend";
 
 const CoinControl = () => {
-  const { coins, setCoins, alias, setCoinsToView, coinsToView } =
-    useCoinContext();
+  const {
+    coins,
+    setCoins,
+    alias,
+    setCoinsToView,
+    coinsToView,
+    router,
+    selectedAmount,
+    setSelectedAmount,
+    selectedCoins,
+    setSelectedCoins,
+  } = useCoinContext();
+
   const [selectAllAs, setSelectAllTo] = useState(undefined);
-  const [selectedCoins, setSelectedCoins] = useState([]);
-  const [totalAmount, setTotalAmount] = useState(0);
 
   useEffect(() => {
+    if (!alias) return;
     GET(`http://localhost:8080/api/wallet/${alias}/coins`).then((result) => {
       const data = result.coins;
       let spentCoins = [];
       let unspentCoins = [];
-      const coinsWithSelection = data.map((coin) => {
-        return { ...coin, must_select: undefined };
-      });
+      const coinsWithSelection = data.map((coin) => ({
+        ...coin,
+        must_select: undefined,
+      }));
+      setCoins(coinsWithSelection);
+
       data.forEach((coin) => {
         const { spent_by } = coin;
         if (!spent_by) {
@@ -49,17 +61,17 @@ const CoinControl = () => {
       .filter((coin) => coin.must_select !== undefined)
       .filter((coin) => coin.must_select !== null);
     setSelectedCoins(filteredCoins);
-  }, [coinsToView]);
+  }, [setSelectedCoins, coinsToView]);
 
   useEffect(() => {
     if (selectedCoins.length === 0) {
-      setTotalAmount(0);
+      setSelectedAmount(0);
     }
     const total = selectedCoins.reduce(function (acc, obj) {
       return acc + obj.amount;
     }, 0);
 
-    setTotalAmount(total);
+    setSelectedAmount(total);
   }, [selectedCoins, selectedCoins]);
 
   const handleSelectAllAsCandidate = useCallback(
@@ -88,7 +100,8 @@ const CoinControl = () => {
   }, [coins]);
 
   const hasAtLeastOneSelected = useMemo(() => {
-    const result = coinsToView?.map((coin) => {
+    if (!coinsToView) return 0;
+    const result = coinsToView.map((coin) => {
       const { must_select } = coin;
       if (must_select !== undefined) {
         return 1;
@@ -100,10 +113,8 @@ const CoinControl = () => {
 
   const handleClickCreateTx = async () => {
     setCookie("selectedCoins", JSON.stringify(selectedCoins));
-    setCookie("totalAmount", JSON.stringify(totalAmount));
+    setCookie("selectedAmount", JSON.stringify(selectedAmount));
   };
-
-  const disableSelectAllAsCandidate = useCallback(() => {}, []);
 
   return (
     <div className="frame_padding flex flex-col gap-8">
@@ -138,21 +149,18 @@ const CoinControl = () => {
         <div className="flex gap-4 items-center">
           <span className="font-medium whitespace-nowrap">
             <span className="input_field">{selectedCoins.length}</span> txos
-            selected, total <span className="input_field">{totalAmount}</span>{" "}
-            sats
+            selected, total{" "}
+            <span className="input_field">{selectedAmount}</span> sats
           </span>
-          <Link
-            href={"/spent-scenario"}
-            className="w-full"
-            onClick={handleClickCreateTx}
+          <button
+            className="main_button"
+            disabled={hasAtLeastOneSelected === 0}
+            onClick={() =>
+              handleClickCreateTx().then(router.push("/spent-scenario"))
+            }
           >
-            <button
-              className="main_button"
-              disabled={hasAtLeastOneSelected === 0}
-            >
-              next create tx &gt;
-            </button>
-          </Link>
+            next create tx &gt;
+          </button>
         </div>
       </div>
     </div>

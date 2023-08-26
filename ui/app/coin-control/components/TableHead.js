@@ -5,8 +5,6 @@ import { memo, useCallback, useState } from "react";
 import { useCoinContext } from "@app/context/coins";
 import TableHead from "@components/TableHead";
 import {
-  SORT_BY_ASC,
-  SORT_BY_DESC,
   TABLE_HEAD_VALUE_AMOUNT,
   TABLE_HEAD_VALUE_OUTPOINTS,
   TABLE_HEAD_VALUE_SPENT_BY,

@@ -1,43 +1,31 @@
 "use client";
 import "../styles/global.css";
-import { memo } from "react";
-import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
-import { GET } from "@utils/request";
+import { memo, useState } from "react";
 import { useCoinContext } from "@app/context/coins";
-
-export function setCookie(name, value, expires) {
-  if (expires) {
-    return Cookies.set(name, value, { expires });
-  }
-  return Cookies.set(name, value);
-}
+import { GET } from "@utils/request";
+import { setCookie } from "@utils/setCookie";
 
 const WelcomePage = () => {
-  const router = useRouter();
-  const { alias, setAlias } = useCoinContext();
+  const [userInput, setUserInput] = useState("");
+  const { router } = useCoinContext();
   const handleClickEnter = async () => {
-    if (!alias) {
-      window["alias_empty_warning_modal"].showModal();
-    } else {
-      try {
-        setCookie("alias", alias);
-        const result = await GET(
-          `http://localhost:8080/api/wallet/${alias}/address`,
-        );
-        if (result.address) {
-          setCookie("address", result.address);
-        }
-        router.push("/coin-control");
-      } catch (error) {
-        console.error("An error occurred:", error);
+    try {
+      setCookie("alias", userInput);
+      const result = await GET(
+        `http://localhost:8080/api/wallet/${userInput}/address`,
+      );
+      if (result.address) {
+        setCookie("address", result.address);
       }
+      router.push("/coin-control");
+    } catch (error) {
+      console.error("An error occurred:", error);
     }
   };
   const handleChange = (e) => {
     const pattern = new RegExp("[^a-z0-9]+", "g");
     const value = e.target.value.replaceAll(pattern, "");
-    setAlias(value);
+    setUserInput(value);
   };
 
   return (
@@ -49,14 +37,18 @@ const WelcomePage = () => {
           placeholder="Type here"
           maxLength="33"
           className="input border border-gray-600 input-bordered rounded-none bg-gray-300 w-full"
-          value={alias}
+          value={userInput}
           onChange={handleChange}
           pattern="[a-z0-9]"
         />
         <button
           type="submit"
           className="w-full btn btn-active rounded-none bg-black text-white"
-          onClick={handleClickEnter}
+          onClick={
+            userInput
+              ? handleClickEnter
+              : () => window["alias_empty_warning_modal"].showModal()
+          }
         >
           Enter
         </button>
