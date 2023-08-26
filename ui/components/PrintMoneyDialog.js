@@ -13,26 +13,28 @@ const COIN_VALUE_SELECTIONS = [
 ];
 const PrintMoneyDialog = () => {
   const { getAddress, address } = useCoinContext();
-  const [SelectedCoinValueRange, setSelectedCoinValueRange] =
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedCoinValueRange, setSelectedCoinValueRange] =
     useState(COIN_VALUE_RANGE_1);
-  const [SelectedCoinCounts, setSelectedCoinCounts] = useState(5);
-  console.log("SelectedCoinCounts", SelectedCoinCounts);
-  console.log("SelectedCoinValueRange", SelectedCoinValueRange);
+  const [selectedCoinCounts, setSelectedCoinCounts] = useState(5);
+  console.log("selectedCoinCounts", selectedCoinCounts);
+  console.log("selectedCoinValueRange", selectedCoinValueRange);
   const handleGetFreeMoney = useCallback(async () => {
     if (!address) {
       getAddress().then();
     } else {
       try {
         await GET(
-          `http://localhost:8080/api/faucet?address=${address}&amount=${SelectedCoinValueRange.value}&count=${SelectedCoinCounts}`,
+          `http://localhost:8080/api/faucet?address=${address}&amount=${selectedCoinValueRange.value}&count=${selectedCoinCounts}`,
         );
-        setTimeout(() => window?.location.reload(), 2000);
+        setIsLoading(true);
+        setTimeout(() => window?.location.reload(), 1000);
       } catch (error) {
         console.error("An error occurred:", error);
         // Handle the error (show an error message, etc.)
       }
     }
-  }, [address]);
+  }, [address, selectedCoinCounts, selectedCoinValueRange]);
 
   return (
     <>
@@ -47,7 +49,7 @@ const PrintMoneyDialog = () => {
                 <button
                   key={option.label}
                   className={`btn rounded-none bg-grey-200 ${
-                    option.value === SelectedCoinValueRange.value &&
+                    option.value === selectedCoinValueRange.value &&
                     "bg-black text-white hover:bg-black hover:text-white"
                   }`}
                   onClick={() => setSelectedCoinValueRange(option)}
@@ -64,7 +66,7 @@ const PrintMoneyDialog = () => {
                       id={`num${i + 1}`}
                       type="radio"
                       onChange={() => setSelectedCoinCounts(i + 1)}
-                      checked={SelectedCoinCounts === i + 1}
+                      checked={selectedCoinCounts === i + 1}
                       className="mask mask-square bg-green-400"
                     />
                     <label htmlFor={`num${i + 1}`}>{i + 1}</label>
@@ -72,8 +74,12 @@ const PrintMoneyDialog = () => {
                 ))}
               </ul>
             </div>
-            <button className="main_button" onClick={handleGetFreeMoney}>
-              Print
+            <button
+              className="main_button"
+              onClick={handleGetFreeMoney}
+              disabled={isLoading}
+            >
+              {isLoading ? "Loading..." : "Print"}
             </button>
           </div>
         </div>
