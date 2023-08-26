@@ -19,8 +19,7 @@ Cargo.lock
 /target
 
 # bitcoin
-bitcoin*
-bitcoin-*/
+/bitcoin*
 
 # UI
 ui/.idea/prettier.xml
