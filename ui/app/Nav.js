@@ -6,6 +6,7 @@ import { SlRefresh } from "react-icons/sl";
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import { useCoinContext } from "@app/context/coins";
 import PrintMoneyDialog from "@components/PrintMoneyDialog";
+import Copy from "@components/Copy";
 
 const Nav = () => {
   const [headerInfo, setHeaderInfo] = useState(undefined);
@@ -23,7 +24,7 @@ const Nav = () => {
   }, []);
 
   const handleRefresh = useCallback(() => window.location.reload(), []);
-
+  console.log("address", address);
   return (
     <>
       <div className="min-h-fit w-full flex gap-5 frame_padding border-b border-gray-700 justify-between">
@@ -58,17 +59,7 @@ const Nav = () => {
         {address && (
           <div className="flex flex-wrap self-start items-center">
             <span className="capitalize">Address:</span>
-
-            <CopyToClipboard text={address} onCopy={() => setShowCopied(true)}>
-              <span
-                className={`hover:cursor-pointer ${
-                  showCopied && "hover:tooltip hover:tooltip-open"
-                } hover:bg-gray-200 item_padding`}
-                data-tip="Copied!"
-              >
-                {address}
-              </span>
-            </CopyToClipboard>
+            <Copy content={address} />
           </div>
         )}
       </div>

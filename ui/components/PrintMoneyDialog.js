@@ -3,35 +3,36 @@ import { GET } from "@utils/request";
 import { useCoinContext } from "@app/context/coins";
 import { useCallback, useState } from "react";
 
-const COIN_VALUE_RANGE_1 = "[1000...50,000]";
-const COIN_VALUE_RANGE_2 = "[50,000..100,000]";
-const COIN_VALUE_RANGE_3 = "[100,000..500,000]";
+const COIN_VALUE_RANGE_1 = { label: "[1000...50,000]", value: 1000 };
+const COIN_VALUE_RANGE_2 = { label: "[50,000..100,000]", value: 5000 };
+const COIN_VALUE_RANGE_3 = { lable: "[100,000..500,000]", value: 100000 };
 const COIN_VALUE_SELECTIONS = [
   COIN_VALUE_RANGE_1,
   COIN_VALUE_RANGE_2,
   COIN_VALUE_RANGE_3,
 ];
 const PrintMoneyDialog = () => {
-  const { address } = useCoinContext();
+  const { getAddress, address } = useCoinContext();
   const [SelectedCoinValueRange, setSelectedCoinValueRange] =
     useState(COIN_VALUE_RANGE_1);
   const [SelectedCoinCounts, setSelectedCoinCounts] = useState(5);
   console.log("SelectedCoinCounts", SelectedCoinCounts);
   console.log("SelectedCoinValueRange", SelectedCoinValueRange);
-  const handleGetFreeMoney = useCallback(
-    async (amount) => {
+  const handleGetFreeMoney = useCallback(async () => {
+    if (!address) {
+      getAddress().then();
+    } else {
       try {
         await GET(
-          `http://localhost:8080/api/faucet?address=${address}&amount=${amount}`,
+          `http://localhost:8080/api/faucet?address=${address}&amount=${SelectedCoinValueRange.value}&count=${SelectedCoinCounts}`,
         );
-        // setTimeout(() => window?.location.reload(), 3000);
+        setTimeout(() => window?.location.reload(), 2000);
       } catch (error) {
         console.error("An error occurred:", error);
         // Handle the error (show an error message, etc.)
       }
-    },
-    [address],
-  );
+    }
+  }, [address]);
 
   return (
     <>
@@ -44,14 +45,14 @@ const PrintMoneyDialog = () => {
             <div className="grid grid-cols-3 gap-4 w-full">
               {COIN_VALUE_SELECTIONS.map((option) => (
                 <button
-                  key={option}
+                  key={option.label}
                   className={`btn rounded-none bg-grey-200 ${
-                    option === SelectedCoinValueRange &&
+                    option.value === SelectedCoinValueRange.value &&
                     "bg-black text-white hover:bg-black hover:text-white"
                   }`}
                   onClick={() => setSelectedCoinValueRange(option)}
                 >
-                  {option}
+                  {option.label}
                 </button>
               ))}
             </div>

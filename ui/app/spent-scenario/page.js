@@ -3,21 +3,20 @@ import { memo, useCallback, useState } from "react";
 import Link from "next/link";
 import { RiAddFill } from "react-icons/ri";
 import { IoChevronBackOutline } from "react-icons/io5";
-import Cookies from "js-cookie";
 import RecipientsTable from "@components/RecipientsTable";
 import CheckboxField from "@components/CheckboxField";
 import SolutionTable from "@components/SolutionTable";
 import NewSolutionForm from "@components/NewSolutionForm";
 import { POST } from "@utils/request";
-import { setCookie } from "@app/page";
 import { useCoinContext } from "@app/context/coins";
-import { CopyToClipboard } from "@node_modules/react-copy-to-clipboard";
+import Copy from "@components/Copy";
+import { setCookie } from "@utils/setCookie";
 
 const SpentScenario = () => {
-  const { alias, spentScenarioId, selectedCoins, address } = useCoinContext();
+  const { alias, spentScenarioId, selectedCoins, address, selectedAmount } =
+    useCoinContext();
   const [solutions, setSolution] = useState([]);
   const [recipients, setRecipients] = useState([]);
-  const [showCopied, setShowCopied] = useState(false);
   const [coinSelectionParameters, setCoinSelectionParameters] = useState({
     minAbsoluteFee: 0,
     freeRate: 1.0,
@@ -34,7 +33,7 @@ const SpentScenario = () => {
 
   const [useLongTerm, setUseLongTerm] = useState(false);
 
-  let totalAmount = JSON.parse(Cookies.get("totalAmount") || 0);
+  // let totalAmount = JSON.parse(Cookies.get("selectedAmount") || 0);
 
   const newRecipient = { address: "", amount: 0 };
   const handleAddRecipientsClick = useCallback(() => {
@@ -127,10 +126,9 @@ const SpentScenario = () => {
   ]);
 
   const handleAddSolutionClick = useCallback(() => {
-    window["my_modal_5"].showModal();
+    window["create_new_solution_modal"].showModal();
   }, []);
 
-  // TODO: DELETE RECIPIENTS BY IDxXD
   const handleDeleteRecipient = useCallback(
     (e) => {
       recipients.splice(e.target.id, 1);
@@ -170,39 +168,26 @@ const SpentScenario = () => {
   return (
     <div className="w-full flex gap-6 flex-col frame_padding">
       <div className="w-full flex justify-between">
-        <Link
-          href={"/coin-control"}
-          className="rounded-none flex items-center w-1/5 cursor-pointer gap-2 font-medium hover:bg-gray-300"
-        >
+        <Link href={"/coin-control"} className="main_button">
           <IoChevronBackOutline />
           Back To Coin Control
         </Link>
         <div className="flex flex-wrap gap-3 self-start items-center">
           <span className="capitalize">Address:</span>
-
-          <CopyToClipboard text={address} onCopy={() => setShowCopied(true)}>
-            <span
-              className={`hover:cursor-pointer ${
-                showCopied && "hover:tooltip hover:tooltip-open"
-              } hover:bg-gray-200 item_padding`}
-              data-tip="Copied!"
-            >
-              {address}
-            </span>
-          </CopyToClipboard>
+          <Copy content={address} />
         </div>
       </div>
       <div className="flex justify-between">
         <div className="page_title">Create Spent Scenarios:</div>
       </div>
-      <div className="section items-center">
+      <div className="flex items-center">
         <div className="section_title">Candidates:</div>
         <div className="section_desc">
           <span className="input_field">
             {selectedCoins && selectedCoins.length}
           </span>{" "}
           txos selected, total{" "}
-          <span className="input_field">{totalAmount}</span> sats
+          <span className="input_field">{selectedAmount}</span> sats
         </div>
       </div>
       <div>
@@ -260,7 +245,7 @@ const SpentScenario = () => {
           </div>
           <div className="w-full flex justify-end">
             <button
-              className="btn btn-active main_button"
+              className="main_button"
               onClick={
                 isDone === true ? handleSwitchEditMode : handlePostNewSpent
               }
@@ -278,7 +263,7 @@ const SpentScenario = () => {
           </button>
         </div>
         <div className="gap-4 flex-col border border-gray-700 w-full frame_padding flex items-start">
-          <div className="section items-center flex flex-col w-full ">
+          <div className="flex flex-col gap-10 w-full items-center">
             {solutions.length > 0 ? (
               <SolutionTable solutions={solutions} />
             ) : (
@@ -295,7 +280,7 @@ const SpentScenario = () => {
           </div>
         </div>
       </div>
-      <dialog id="my_modal_5" className="modal">
+      <dialog id="create_new_solution_modal" className="modal">
         <form
           method="dialog"
           className="modal-box rounded-none frame_padding border border-gray-700"

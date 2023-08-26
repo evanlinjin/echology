@@ -1,5 +1,9 @@
 "use client";
 import { RiCloseFill } from "react-icons/ri";
+import {
+  TABLE_HEAD_VALUE_ADDRESS,
+  TABLE_HEAD_VALUE_AMOUNT,
+} from "@utils/constants";
 import TableHead from "@components/TableHead";
 
 const RecipientsTable = ({
@@ -9,14 +13,16 @@ const RecipientsTable = ({
   onChangeRecipientAmount,
   onDeleteRecipient,
 }) => {
+  const headers = [TABLE_HEAD_VALUE_ADDRESS, TABLE_HEAD_VALUE_AMOUNT];
   return (
     <div className="w-2/3">
       <table className="main_table">
         <thead>
           <tr>
             <th>-</th>
-            <TableHead label="Address:" />
-            <TableHead label="Amount:" />
+            {headers.map((header) => (
+              <TableHead label={header.label} desc={header.desc} />
+            ))}
             <th>-</th>
           </tr>
         </thead>

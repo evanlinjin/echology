@@ -67,7 +67,7 @@
 }
 
 .main_button {
-    @apply btn main_background rounded-none py-2.5 px-2.5  border border-black whitespace-nowrap h-fit font-medium capitalize disabled:cursor-not-allowed disabled:text-gray-500
+    @apply btn main_background rounded-none py-2.5 px-2.5  border border-black whitespace-nowrap h-fit font-medium capitalize hover:cursor-pointer disabled:cursor-not-allowed disabled:text-gray-500
 }
 
 .black_button {
@@ -96,15 +96,11 @@
 
 /*// spent scenarios*/
 .section_title {
-    @apply border border-black whitespace-nowrap main_background text-body1 py-2.5 px-2.5
+    @apply text-body1 py-2.5 px-2.5
 }
 
 .section_desc {
     @apply whitespace-nowrap text-body1 py-2.5 px-2.5
-}
-
-.section {
-    @apply flex gap-10 w-full
 }
 
 .app {

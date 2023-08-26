@@ -1,8 +1,10 @@
-import React, { useCallback, useState } from "react";
-import TableHead from "@components/TableHead";
-import { RiBroadcastLine } from "@node_modules/react-icons/ri";
-import { AiOutlineExclamationCircle } from "@node_modules/react-icons/ai";
+import { useCallback, useState } from "react";
+import { RiBroadcastLine } from "react-icons/ri";
+import { AiOutlineExclamationCircle } from "react-icons/ai";
 import { GET, POST } from "@utils/request";
+import Link from "next/link";
+import { IoChevronBackOutline } from "react-icons/io5";
+import TableHead from "@components/TableHead";
 
 const SolutionTable = ({ solutions }) => {
   if (solutions.length === 0) {
@@ -107,6 +109,15 @@ const SolutionTable = ({ solutions }) => {
         >
           <h3 className="font-bold text-lg">Broadcast Success!</h3>
           <p className="py-4">Press ESC key or click outside to close</p>
+          <div className="flex w-full">
+            <Link
+              href={"/coin-control"}
+              className="main_button justify-self-end"
+            >
+              <IoChevronBackOutline />
+              Back To Coin Control
+            </Link>
+          </div>
         </form>
         <form method="dialog" className="modal-backdrop">
           <button>close</button>

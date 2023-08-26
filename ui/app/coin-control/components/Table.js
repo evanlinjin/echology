@@ -1,27 +1,17 @@
 "use client";
 import { memo, useCallback } from "react";
-import TableHead from "@components/TableHead";
+import TableHead from "@app/coin-control/components/TableHead";
 import TableRow from "@app/coin-control/components/TableRow";
 import { useCoinContext } from "@app/context/coins";
+import {
+  TABLE_HEAD_VALUE_AMOUNT,
+  TABLE_HEAD_VALUE_CONFIRMATION,
+  TABLE_HEAD_VALUE_OUTPOINTS,
+  TABLE_HEAD_VALUE_SPENT_BY,
+} from "@utils/constants";
 
-export const TABLE_HEAD_VALUE_OUTPOINTS = "OutPoints";
-export const TABLE_HEAD_VALUE_CONFIRMATION = "Confirmation";
-export const TABLE_HEAD_VALUE_SPENT_BY = "Spent By";
-export const TABLE_HEAD_VALUE_AMOUNT = "Amount";
-export const SORT_BY_DESC = "desc";
-export const SORT_BY_ASC = "asc";
 const Table = ({ selectAllAs }) => {
-  const { coins, setCoinsToView, coinsToView } = useCoinContext();
-
-  const generateDesc = useCallback((label) => {
-    if (label === TABLE_HEAD_VALUE_SPENT_BY) {
-      return "txid / confirmations";
-    }
-    if (label === TABLE_HEAD_VALUE_AMOUNT) {
-      return "sats";
-    }
-    return undefined;
-  }, []);
+  const { setCoinsToView, coinsToView } = useCoinContext();
 
   // const handleSortByAmount = useCallback(
   //   (sortBy) => {
@@ -70,12 +60,12 @@ const Table = ({ selectAllAs }) => {
         <tr>
           <th />
           <th />
-          {headers.map((label) => (
+          {headers.map((header) => (
             <TableHead
-              key={label}
-              label={label}
-              desc={generateDesc(label)}
-              sort={label === TABLE_HEAD_VALUE_AMOUNT}
+              key={header.label}
+              label={header.label}
+              desc={header.desc}
+              sort={header.label === TABLE_HEAD_VALUE_AMOUNT}
             />
           ))}
         </tr>
