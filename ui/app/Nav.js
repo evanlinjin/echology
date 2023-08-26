@@ -28,7 +28,7 @@ const Nav = () => {
   const handleRefresh = useCallback(() => window.location.reload(), []);
   return (
     <>
-      <div className="min-h-fit w-full flex gap-5 frame_padding border-b border-gray-700 justify-between">
+      <div className="h-fit w-full flex gap-5 frame_padding border-b border-gray-700 justify-between">
         <div className="flex gap-5">
           <div className="tooltip tooltip-bottom" data-tip="Print Money">
             <BitcoinButton />

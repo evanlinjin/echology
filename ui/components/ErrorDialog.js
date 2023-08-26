@@ -5,7 +5,7 @@ import { memo } from "react";
 const ErrorDialog = () => {
   const { errorMessage, setErrorMessage } = useCoinContext();
   return (
-    <div className="relative">
+    <div className={`relative ${!errorMessage && "hidden"}`}>
       <input
         type="checkbox"
         id="my_modal_7"
