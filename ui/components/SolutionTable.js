@@ -1,12 +1,15 @@
-import { useCallback, useState } from "react";
+"use client";
+import { memo, useCallback, useState } from "react";
 import { RiBroadcastLine } from "react-icons/ri";
 import { AiOutlineExclamationCircle } from "react-icons/ai";
 import { GET, POST } from "@utils/request";
 import Link from "next/link";
 import { IoChevronBackOutline } from "react-icons/io5";
 import TableHead from "@components/TableHead";
+import { useCoinContext } from "@app/context/coins";
 
 const SolutionTable = ({ solutions }) => {
+  const { setErrorMessage } = useCoinContext();
   if (solutions.length === 0) {
     return null;
   }
@@ -21,15 +24,26 @@ const SolutionTable = ({ solutions }) => {
   ];
   const [details, setDetails] = useState("");
   const handleBroadcast = useCallback((hex) => {
-    POST(`http://localhost:8080/api/network/broadcast?tx=${hex}`).then(() =>
-      window["my_modal_2"].showModal(),
+    POST(`http://localhost:8080/api/network/broadcast?tx=${hex}`).then(
+      (result) => {
+        if (result.error) {
+          setErrorMessage(result.error);
+        } else {
+          window["broadcast_success_modal"].showModal();
+        }
+      },
     );
   }, []);
 
   const handleGetMoreDetails = useCallback((hex) => {
     GET(`http://localhost:8080/api/decode?tx=${hex}`)
-      .then((r) => setDetails({ ...r }))
-      .then(() => setTimeout(() => window["my_modal_8"].showModal(), 1500));
+      .then((result) => {
+        if (result.error) {
+          setErrorMessage(result.error);
+        }
+        setDetails(result);
+      })
+      .then(() => window["more_detail_modal"].showModal());
   }, []);
   return (
     <>
@@ -54,7 +68,7 @@ const SolutionTable = ({ solutions }) => {
                 txid.length - 6,
               )}`;
               return (
-                <tr className="hover">
+                <tr className="hover" key={`solution${txid}:${index}`}>
                   <td>{index}</td>
                   <td className="input_field">{time}</td>
                   <td className="input_field">{txId}</td>
@@ -66,19 +80,23 @@ const SolutionTable = ({ solutions }) => {
                     <td className="input_field">--</td>
                   )}
                   <td className="input_field capitalize">
-                    {solution.metrics &&
-                      solution.metrics.used_excess_strategy
+                    {solution["metrics"] &&
+                      solution["metrics"]["used_excess_strategy"]
                         .split("_")
                         .join(" ")}
                   </td>
                   <td className="input_field">
-                    {solution.metrics && solution.metrics.waste}
+                    {solution["metrics"]
+                      ? solution["metrics"]["waste"]
+                      : undefined}
                   </td>
                   <td className="input_field">
-                    {solution.metrics && solution.metrics.feerate_deviation}
+                    {solution["metrics"]
+                      ? solution["metrics"]["feerate_deviation"]
+                      : undefined}
                   </td>
                   <td className="input_field">
-                    {solution.metrics && solution.metrics.tx_size}
+                    {solution["metrics"] && solution["metrics"]["tx_size"]}
                   </td>
                   <td className="flex gap-6 items-center h-full pt-2">
                     <button
@@ -102,7 +120,7 @@ const SolutionTable = ({ solutions }) => {
         </tbody>
       </table>
 
-      <dialog id="my_modal_2" className="modal">
+      <dialog id="broadcast_success_modal" className="modal">
         <form
           method="dialog"
           className="modal-box w-1/2 max-w-5xl rounded-none"
@@ -123,10 +141,10 @@ const SolutionTable = ({ solutions }) => {
           <button>close</button>
         </form>
       </dialog>
-      <dialog id="my_modal_8" className="modal">
+      <dialog id="more_detail_modal" className="modal">
         <form
           method="dialog"
-          className="modal-box w-5/6 max-w-5xl rounded-none"
+          className="modal-box w-11/12 max-w-5xl h-max rounded-none"
         >
           <h3 className="font-bold text-lg">More Details</h3>
           <p className="py-4">{JSON.stringify(details)}</p>
@@ -138,4 +156,4 @@ const SolutionTable = ({ solutions }) => {
     </>
   );
 };
-export default SolutionTable;
+export default memo(SolutionTable);

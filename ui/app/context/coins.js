@@ -14,8 +14,6 @@ export const CoinContextProvider = ({ children }) => {
   const [selectedAmount, setSelectedAmount] = useState(0);
   const [selectedCoins, setSelectedCoins] = useState([]);
 
-  const [spentScenarioId, setSpentScenarioId] = useState(undefined);
-
   const [errorMessage, setErrorMessage] = useState(undefined);
   const router = useRouter();
 
@@ -28,19 +26,11 @@ export const CoinContextProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    const id = Cookies.get("spentScenarioId")
-      ? Cookies.get("spentScenarioId")
-      : undefined;
-    setSpentScenarioId(id);
-  }, [setSpentScenarioId]);
-
-  useEffect(() => {
     const selectedCoins = Cookies.get("selectedCoins")
       ? JSON.parse(Cookies.get("selectedCoins"))
       : [];
     setSelectedCoins(selectedCoins);
   }, [setSelectedCoins]);
-
   return (
     <CoinContext.Provider
       value={{
@@ -55,7 +45,6 @@ export const CoinContextProvider = ({ children }) => {
         setCoinsToView,
         setSelectedAmount,
         setSelectedCoins,
-        spentScenarioId,
         setErrorMessage,
         errorMessage,
       }}

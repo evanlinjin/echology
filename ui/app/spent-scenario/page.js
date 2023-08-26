@@ -14,14 +14,8 @@ import { setCookie } from "@utils/setCookie";
 import Cookies from "js-cookie";
 
 const SpentScenario = () => {
-  const {
-    alias,
-    spentScenarioId,
-    selectedCoins,
-    address,
-    selectedAmount,
-    setErrorMessage,
-  } = useCoinContext();
+  const { selectedCoins, address, selectedAmount, setErrorMessage } =
+    useCoinContext();
   const [solutions, setSolution] = useState([]);
   const [recipients, setRecipients] = useState([]);
   const [coinSelectionParameters, setCoinSelectionParameters] = useState({
@@ -105,6 +99,7 @@ const SpentScenario = () => {
   );
 
   const handleRunSolution = useCallback(() => {
+    const spentScenarioId = Cookies.get("spentScenarioId");
     const bodyBnb = {
       spend_scenario_id: spentScenarioId,
       algorithm: "bnb",
@@ -124,12 +119,22 @@ const SpentScenario = () => {
     if (selectionAlgorithm === "select_until_finished") {
       body = bodySuf;
     }
-    POST(`http://localhost:8080/api/wallet/${alias}/new_solution`, body)
+    POST(
+      `http://localhost:8080/api/wallet/${Cookies.get("alias")}/new_solution`,
+      body,
+    )
       .then((result) => {
-        setSolution([...solutions, { ...result }]);
+        if (result.error) {
+          setErrorMessage(result.error);
+        } else {
+          const updatedSolutions = [...solutions];
+          updatedSolutions.push(result);
+          setSolution(updatedSolutions);
+        }
       })
-      .catch((error) => console.log("error", error));
+      .catch((error) => setErrorMessage(error));
   }, [
+    solutions,
     selectionAlgorithm,
     bnbParameters,
     excessStrategy,
