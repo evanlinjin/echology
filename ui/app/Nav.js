@@ -7,6 +7,8 @@ import { useCoinContext } from "@app/context/coins";
 import PrintMoneyDialog from "@components/PrintMoneyDialog";
 import Copy from "@components/Copy";
 import Cookies from "@node_modules/js-cookie/dist/js.cookie.mjs";
+import { LiaBitcoin } from "@node_modules/react-icons/lia";
+import BitcoinButton from "@components/BitcoinButton";
 
 const Nav = () => {
   const [headerInfo, setHeaderInfo] = useState(undefined);
@@ -30,15 +32,8 @@ const Nav = () => {
     <>
       <div className="min-h-fit w-full flex gap-5 frame_padding border-b border-gray-700 justify-between">
         <div className="flex gap-5">
-          <div className="tooltip tooltip-bottom" data-tip="Get Free Money">
-            <div className="avatar">
-              <label
-                htmlFor="free_money_dialog"
-                className="btn btn-ghost hover:bg-transparent text-[#F7931A]"
-              >
-                <RiBitCoinFill fontSize={70} />
-              </label>
-            </div>
+          <div className="tooltip tooltip-bottom" data-tip="Print Money">
+            <BitcoinButton />
           </div>
           <div className="tooltip tooltip-bottom" data-tip="Refresh">
             <div className="avatar">

@@ -7,6 +7,7 @@ import { GET } from "@utils/request";
 import { setCookie } from "@utils/setCookie";
 import Cookies from "@node_modules/js-cookie/dist/js.cookie.mjs";
 import { RiBitCoinFill } from "@node_modules/react-icons/ri";
+import BitcoinButton from "@components/BitcoinButton";
 
 export const COIN_SELECT_OPTION_CANDIDATE = "candidate";
 export const COIN_SELECT_OPTION_IGNORED = "ignored";
@@ -49,8 +50,8 @@ const CoinControl = () => {
           }
         });
         const sortedSpentCoins = spentCoins.sort((a, b) => {
-          const txidA = a.spent_by ? a.spent_by.txid : "";
-          const txidB = b.spent_by ? b.spent_by.txid : "";
+          const txidA = a["spent_by"] ? a["spent_by"]["txid"] : "";
+          const txidB = b["spent_by"] ? b["spent_by"]["txid"] : "";
           return txidA.localeCompare(txidB);
         });
         setCoins([...coinsWithSelection]);
@@ -152,15 +153,12 @@ const CoinControl = () => {
         />
       ) : (
         <div className="w-full text-center h-full grid place-items-center">
-          <span>no money yet...</span>
-          <div className="flex flex-col gap-10">
-            <label
-              htmlFor="free_money_dialog"
-              className="btn btn-ghost hover:bg-transparent text-[#F7931A]"
-            >
-              <RiBitCoinFill fontSize={70} />
-            </label>
-            <span>click to print</span>
+          <div className="flex flex-col gap-5">
+            <span>no money yet...</span>
+            <div className="flex flex-col items-center gap-3">
+              <BitcoinButton />
+              <span>click to print</span>
+            </div>
           </div>
         </div>
       )}

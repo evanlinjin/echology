@@ -11,6 +11,7 @@ import {
 } from "@utils/constants";
 import { RiBitCoinLine } from "react-icons/ri";
 import { useMemo } from "react";
+import BitcoinButton from "@components/BitcoinButton";
 
 const Table = ({ selectAllAs }) => {
   const { setCoinsToView, coinsToView } = useCoinContext();
@@ -46,14 +47,7 @@ const Table = ({ selectAllAs }) => {
       {coinsToView.length === 0 && (
         <div className="w-full">
           no money...
-          <div className="avatar">
-            <label
-              htmlFor="free_money_dialog"
-              className="btn nav_button_square"
-            >
-              <RiBitCoinLine fontSize={56} />
-            </label>
-          </div>
+          <BitcoinButton />
         </div>
       )}
       <tbody>

@@ -24,8 +24,6 @@
     width: 2rem;
     height: 2rem;
     background-color: #eee;
-    /*color: #ccc;*/
-    /*transition: 0.3s;*/
 
     & label {
         display: flex;
