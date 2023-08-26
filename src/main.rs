@@ -135,11 +135,25 @@ async fn faucet(req: Request<Echology>) -> tide::Result {
     }
     let q: Query = req.query()?;
 
+    let seed = std::time::UNIX_EPOCH.elapsed()?.as_secs();
+    let amount = if (1000..50_000).contains(&q.amount) {
+        1000 + seed % 50_000
+    } else if (50_000..100_000).contains(&q.amount) {
+        50_000 + seed % 100_000
+    } else if (100_000..500_000).contains(&q.amount) {
+        100_000 + seed % 500_000
+    } else {
+        return Err(tide::Error::new(
+            StatusCode::BadRequest,
+            anyhow!("invalid 'amount' range"),
+        ));
+    };
+
     let client = &req.state().bitcoind.client;
     let txids = core::iter::repeat_with(|| {
         client.send_to_address(
             &q.address,
-            Amount::from_sat(q.amount),
+            Amount::from_sat(amount),
             None,
             None,
             None,
@@ -183,18 +197,13 @@ async fn wallet_new_solution(mut req: Request<Echology>) -> tide::Result {
     let solution_req: CsSolutionRequest = req.body_json().await?;
     let alias = req.param("alias")?;
 
-    match solution_req.algorithm {
-        wally::CsAlgorithm::Bnb { bnb_rounds, .. } => {
-            if bnb_rounds > 50_000 {
-                return Err(tide::Error::new(
-                    StatusCode::BadRequest,
-                    anyhow!(
-                        "are you trying to screw us over with so many bnb rounds? 50k is the max"
-                    ),
-                ));
-            }
+    if let wally::CsAlgorithm::Bnb { bnb_rounds, .. } = solution_req.algorithm {
+        if bnb_rounds > 50_000 {
+            return Err(tide::Error::new(
+                StatusCode::BadRequest,
+                anyhow!("are you trying to screw us over with so many bnb rounds? 50k is the max"),
+            ));
         }
-        _ => {}
     }
 
     let wallet = req.state().get_or_create_wallet(alias).await?;
