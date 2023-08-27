@@ -4,8 +4,9 @@ use async_std::{
     sync::{Arc, RwLock},
     task::JoinHandle,
 };
-use bdk_bitcoind_rpc::{bitcoincore_rpc::RpcApi, BitcoindRpcUpdate};
+use bdk_bitcoind_rpc::EmittedUpdate;
 use bdk_chain::local_chain::LocalChain;
+use bitcoind::bitcoincore_rpc::RpcApi;
 use serde::{Deserialize, Serialize};
 
 use crate::wally::Wally;
@@ -42,7 +43,7 @@ impl Echology {
         );
         let auth =
             bdk_bitcoind_rpc::bitcoincore_rpc::Auth::CookieFile(d.params.cookie_file.clone());
-        let (tx, rx) = std::sync::mpsc::sync_channel::<bdk_bitcoind_rpc::BitcoindRpcUpdate>(10);
+        let (tx, rx) = std::sync::mpsc::sync_channel::<bdk_bitcoind_rpc::EmittedUpdate>(10);
 
         let echology = Self {
             bitcoind: Arc::new(d),
@@ -53,24 +54,23 @@ impl Echology {
 
         let emitter_jh = async_std::task::spawn_blocking(move || -> tide::Result<()> {
             let client = bdk_bitcoind_rpc::bitcoincore_rpc::Client::new(&url, auth)?;
-            let mut emitter =
-                bdk_bitcoind_rpc::BitcoindRpcEmitter::new(&client, 0, Some(local_chain_tip));
+            let mut emitter = bdk_bitcoind_rpc::Emitter::new(&client, 0, Some(local_chain_tip));
             loop {
-                match emitter.next_update() {
+                match emitter.emit_update() {
                     Ok(update) => {
                         let is_mempool = update.is_mempool();
                         tide::log::info!(
                             "[emitter] found update: {}",
                             match &update {
-                                bdk_bitcoind_rpc::BitcoindRpcUpdate::Block { cp, .. } => {
-                                    format!("block: height={}, hash={}", cp.height(), cp.hash())
-                                }
-                                bdk_bitcoind_rpc::BitcoindRpcUpdate::Mempool { cp, txs } => {
+                                bdk_bitcoind_rpc::EmittedUpdate::Block(block) => {
                                     format!(
-                                        "mempool: height={}, tx_count={}",
-                                        cp.height(),
-                                        txs.len()
+                                        "block: height={}, hash={}",
+                                        block.cp.height(),
+                                        block.cp.hash()
                                     )
+                                }
+                                bdk_bitcoind_rpc::EmittedUpdate::Mempool(mempool) => {
+                                    format!("mempool: tx_count={}", mempool.txs.len())
                                 }
                             }
                         );
@@ -92,10 +92,10 @@ impl Echology {
             let echology = echology.clone();
             async_std::task::spawn(async move {
                 for update in rx {
-                    let utxo_inc_jh = if let BitcoindRpcUpdate::Block { info, .. } = &update {
+                    let utxo_inc_jh = if let EmittedUpdate::Block(block) = &update {
                         let jh = async_std::task::spawn_blocking({
                             let echology = echology.clone();
-                            let height = info.height as u64;
+                            let height = block.checkpoint().height() as u64;
                             move || {
                                 if let Ok(r) = echology.bitcoind.client.get_block_stats_fields(height as _, &[bitcoind::bitcoincore_rpc::json::BlockStatsFields::UtxoIncrease]) {
                                     r.utxo_increase.unwrap_or_default()
@@ -105,28 +105,27 @@ impl Echology {
                             }
                         });
                         let mut stats = echology.stats.write().await;
-                        stats.height = info.height as u32;
-                        stats.next_block = info.time as u64 + blocktime;
+                        stats.height = block.checkpoint().height();
+                        stats.next_block = block.block.header.time as u64 + blocktime;
                         Some(jh)
                     } else {
                         None
                     };
 
-                    let local_update = update
-                        .into_update::<(), _, _>(bdk_bitcoind_rpc::confirmation_height_anchor);
+                    if let Some(chain_update) = update.chain_update() {
+                        echology.chain.write().await.apply_update(chain_update)?;
+                    }
 
-                    echology
-                        .chain
-                        .write()
-                        .await
-                        .update(local_update.tip, true)?;
+                    let graph_update = update
+                        .indexed_tx_graph_update(bdk_bitcoind_rpc::confirmation_height_anchor);
 
                     let wallets = echology.wallets.read().await;
                     for wallet in wallets.values() {
                         let mut wallet = wallet.write().await;
                         let _ = wallet
                             .indexed_tx_graph
-                            .apply_update(local_update.graph.clone());
+                            .insert_relevant_txs(graph_update.clone());
+                        // .apply_update(local_update.graph.clone());
                     }
 
                     if let Some(inc) = utxo_inc_jh {
@@ -145,7 +144,7 @@ impl Echology {
                 let hashes = echology
                     .bitcoind
                     .client
-                    .generate_to_address(420, &address)?;
+                    .generate_to_address(420, &address.clone().assume_checked())?;
                 tide::log::info!(
                     "[miner] generated to height={}, tip_hash={}",
                     hashes.len(),
@@ -154,7 +153,10 @@ impl Echology {
 
                 loop {
                     std::thread::sleep(std::time::Duration::from_secs(blocktime));
-                    let hashes = echology.bitcoind.client.generate_to_address(1, &address)?;
+                    let hashes = echology
+                        .bitcoind
+                        .client
+                        .generate_to_address(1, &address.clone().assume_checked())?;
                     if let Some(hash) = hashes.last() {
                         tide::log::info!("[miner] found block: {}", hash);
                     }
