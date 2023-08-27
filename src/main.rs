@@ -135,32 +135,38 @@ async fn faucet(req: Request<Echology>) -> tide::Result {
     }
     let q: Query = req.query()?;
 
-    let seed = std::time::UNIX_EPOCH.elapsed()?.as_secs();
-    let amount = if (1000..50_000).contains(&q.amount) {
-        1000 + seed % 50_000
-    } else if (50_000..100_000).contains(&q.amount) {
-        50_000 + seed % 100_000
-    } else if (100_000..500_000).contains(&q.amount) {
-        100_000 + seed % 500_000
-    } else {
-        return Err(tide::Error::new(
-            StatusCode::BadRequest,
-            anyhow!("invalid 'amount' range"),
-        ));
-    };
-
     let client = &req.state().bitcoind.client;
     let txids = core::iter::repeat_with(|| {
-        client.send_to_address(
-            &q.address,
-            Amount::from_sat(amount),
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-        )
+        let seed = rand::random::<u64>();
+        let amount = if (1000..50_000).contains(&q.amount) {
+            1000 + seed % 50_000
+        } else if (50_000..100_000).contains(&q.amount) {
+            50_000 + seed % 100_000
+        } else if (100_000..500_000).contains(&q.amount) {
+            100_000 + seed % 500_000
+        } else {
+            return Err(tide::Error::new(
+                StatusCode::BadRequest,
+                anyhow!("invalid 'amount' range"),
+            ));
+        };
+        client
+            .send_to_address(
+                &q.address,
+                Amount::from_sat(amount),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .map_err(|e| {
+                tide::Error::new(
+                    StatusCode::InternalServerError,
+                    anyhow!("failed to send money: {}", e),
+                )
+            })
     })
     .take(q.count)
     .collect::<Result<Vec<_>, _>>()?;

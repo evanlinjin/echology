@@ -16,6 +16,7 @@ bdk_bitcoind_rpc = { git = "https://github.com/evanlinjin/bdk.git", rev = "4f327
 bdk_coin_select = { git = "https://github.com/evanlinjin/bdk.git", rev = "4f327134815cd52789cf13a595927e1eaf1cbfc0" }
 bdk_tmp_plan = { git = "https://github.com/evanlinjin/bdk.git", rev = "4f327134815cd52789cf13a595927e1eaf1cbfc0" }
 tide-rustls = "0.3.0"
+rand = { version = "0.8" }
 
 [features]
 internal_bitcoind = ["bitcoind/23_0"]
