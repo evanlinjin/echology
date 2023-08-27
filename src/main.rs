@@ -7,6 +7,7 @@ use bdk_chain::bitcoin::Amount;
 use bitcoind::anyhow::anyhow;
 use bitcoind::bitcoincore_rpc::RpcApi;
 use echo::*;
+use miniscript::bitcoin::address::NetworkUnchecked;
 use tide::prelude::*;
 use tide::Request;
 use tide::Response;
@@ -129,7 +130,7 @@ async fn decode(req: Request<Echology>) -> tide::Result {
 async fn faucet(req: Request<Echology>) -> tide::Result {
     #[derive(Deserialize)]
     struct Query {
-        pub address: Address,
+        pub address: Address<NetworkUnchecked>,
         pub amount: u64,
         pub count: usize,
     }
@@ -152,7 +153,7 @@ async fn faucet(req: Request<Echology>) -> tide::Result {
         };
         client
             .send_to_address(
-                &q.address,
+                &q.address.clone().assume_checked(),
                 Amount::from_sat(amount),
                 None,
                 None,

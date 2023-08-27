@@ -4,9 +4,7 @@ use bdk_chain::bitcoin::hashes::Hash;
 use bdk_chain::bitcoin::psbt::Prevouts;
 use bdk_chain::bitcoin::secp256k1::Secp256k1;
 use bdk_chain::bitcoin::secp256k1::SecretKey;
-use bdk_chain::bitcoin::util::sighash::SighashCache;
 use bdk_chain::bitcoin::Address;
-use bdk_chain::bitcoin::LockTime;
 use bdk_chain::bitcoin::Network;
 use bdk_chain::bitcoin::OutPoint;
 use bdk_chain::bitcoin::PrivateKey;
@@ -25,9 +23,13 @@ use bdk_chain::DescriptorExt;
 use bdk_chain::IndexedTxGraph;
 use bdk_chain::SpkTxOutIndex;
 use bdk_chain::TxGraph;
+use bdk_coin_select::Candidate;
 use bdk_coin_select::CoinSelector;
-use bdk_coin_select::WeightedValue;
 use bitcoind::anyhow::anyhow;
+use miniscript::bitcoin::absolute;
+use miniscript::bitcoin::address::NetworkUnchecked;
+use miniscript::bitcoin::sighash::SighashCache;
+use std::cmp::Reverse;
 use std::collections::HashMap;
 use tide::prelude::*;
 use tide::StatusCode;
@@ -73,20 +75,20 @@ pub struct ScenarioCandidate {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScenarioRecipient {
-    pub address: Address,
+    pub address: Address<NetworkUnchecked>,
     pub amount: u64,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CsCandidateOrder {
     #[serde(rename = "largest_first")]
-    LargestFirst,
+    Largest,
     #[serde(rename = "smallest_first")]
-    SmallestFirst,
+    Smallest,
     #[serde(rename = "oldest_first")]
-    OldestFirst,
+    Oldest,
     #[serde(rename = "newest_first")]
-    NewestFirst,
+    Newest,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -111,24 +113,11 @@ pub enum CsExcessStrategy {
 }
 
 impl CsExcessStrategy {
-    pub fn from_kind(kind: bdk_coin_select::ExcessStrategyKind) -> Self {
-        match kind {
-            bdk_coin_select::ExcessStrategyKind::ToFee => Self::ExcessToFee,
-            bdk_coin_select::ExcessStrategyKind::ToRecipient => Self::ExcessToRecipient,
-            bdk_coin_select::ExcessStrategyKind::ToDrain => Self::ExcessToChangeOutput,
-        }
-    }
-
-    pub fn kind(self) -> Option<bdk_coin_select::ExcessStrategyKind> {
-        match self {
-            CsExcessStrategy::BestStrategy => None,
-            CsExcessStrategy::ExcessToFee => Some(bdk_coin_select::ExcessStrategyKind::ToFee),
-            CsExcessStrategy::ExcessToRecipient => {
-                Some(bdk_coin_select::ExcessStrategyKind::ToRecipient)
-            }
-            CsExcessStrategy::ExcessToChangeOutput => {
-                Some(bdk_coin_select::ExcessStrategyKind::ToDrain)
-            }
+    pub fn from_drain(drain: &bdk_coin_select::Drain) -> Self {
+        if drain.is_some() {
+            Self::ExcessToChangeOutput
+        } else {
+            Self::ExcessToFee
         }
     }
 }
@@ -171,14 +160,14 @@ impl Wally {
         let sk = PrivateKey {
             compressed: true,
             network: Network::Regtest,
-            inner: SecretKey::from_slice(&phrase_hash).expect("32 bytes, within curve order"),
+            inner: SecretKey::from_slice(phrase_hash.as_ref())
+                .expect("32 bytes, within curve order"),
         };
-        println!("sk: {}", sk);
 
         let secp = Secp256k1::default();
         let (descriptor, keymap) =
             Descriptor::<DescriptorPublicKey>::parse_descriptor(&secp, &format!("tr({})", sk))?;
-        let spk = descriptor.at_derivation_index(0).script_pubkey();
+        let spk = descriptor.at_derivation_index(0).unwrap().script_pubkey();
 
         let mut indexed_tx_graph =
             IndexedTxGraph::<ConfirmationHeightAnchor, _>::new(SpkTxOutIndex::<()>::default());
@@ -231,7 +220,7 @@ impl Wally {
                     StatusCode::BadRequest,
                     anyhow!(
                         "address {} is not valid for network {}",
-                        recipient.address,
+                        recipient.address.clone().assume_checked(),
                         Network::Regtest
                     ),
                 ));
@@ -286,10 +275,11 @@ pub fn create_spend_solution(
         keys: keymap.iter().map(|(pk, _)| pk.clone()).collect(),
         ..Default::default()
     };
-    let plan = bdk_tmp_plan::plan_satisfaction(&descriptor.at_derivation_index(0), &assets)
-        .expect("must have plan");
+    let plan =
+        bdk_tmp_plan::plan_satisfaction(&descriptor.at_derivation_index(0).unwrap(), &assets)
+            .expect("must have plan");
 
-    let mut candidates = graph
+    let raw_candidates = graph
         .filter_chain_txouts(
             chain,
             chain_tip,
@@ -300,134 +290,186 @@ pub fn create_spend_solution(
         )
         .collect::<Vec<_>>();
 
-    // sort candidates if algorithm requires it
-    if let CsAlgorithm::SelectUntilFinished { candidate_order } = &algorithm {
-        match candidate_order {
-            CsCandidateOrder::LargestFirst => {
-                candidates.sort_by_key(|(_, txo)| std::cmp::Reverse(txo.txout.value))
-            }
-            CsCandidateOrder::SmallestFirst => candidates.sort_by_key(|(_, txo)| txo.txout.value),
-            CsCandidateOrder::OldestFirst => candidates.sort_by_key(|(_, txo)| txo.chain_position),
-            CsCandidateOrder::NewestFirst => {
-                candidates.sort_by_key(|(_, txo)| std::cmp::Reverse(txo.chain_position))
-            }
-        }
-    }
-
-    let weighted_candidates = candidates
+    let candidates = raw_candidates
         .iter()
-        .map(|(_, utxo)| {
-            WeightedValue::new(
-                utxo.txout.value,
+        .map(|(_, txo)| {
+            Candidate::new(
+                txo.txout.value,
                 plan.expected_weight() as _,
                 plan.witness_version().is_some(),
             )
         })
         .collect::<Vec<_>>();
 
-    let mut output = scenario
-        .recipients
-        .iter()
-        .map(|sr| TxOut {
-            value: sr.amount,
-            script_pubkey: sr.address.script_pubkey(),
-        })
-        .collect::<Vec<_>>();
+    // // sort candidates if algorithm requires it
+    // if let CsAlgorithm::SelectUntilFinished { candidate_order } = &algorithm {
+    //     match candidate_order {
+    //         CsCandidateOrder::LargestFirst => {
+    //             raw_candidates.sort_by_key(|(_, txo)| std::cmp::Reverse(txo.txout.value))
+    //         }
+    //         CsCandidateOrder::SmallestFirst => raw_candidates.sort_by_key(|(_, txo)| txo.txout.value),
+    //         CsCandidateOrder::OldestFirst => raw_candidates.sort_by_key(|(_, txo)| txo.chain_position),
+    //         CsCandidateOrder::NewestFirst => {
+    //             raw_candidates.sort_by_key(|(_, txo)| std::cmp::Reverse(txo.chain_position))
+    //         }
+    //     }
+    // }
 
-    let mut change_output = TxOut {
-        value: 0,
-        script_pubkey: descriptor.at_derivation_index(0).script_pubkey(),
+    // let weighted_candidates = raw_candidates
+    //     .iter()
+    //     .map(|(_, utxo)| {
+    //         WeightedValue::new(
+    //             utxo.txout.value,
+    //             plan.expected_weight() as _,
+    //             plan.witness_version().is_some(),
+    //         )
+    //     })
+    //     .collect::<Vec<_>>();
+
+    let mut transaction = Transaction {
+        version: 0x02,
+        // because the temporary planning module does not support timelocks, we can use the chain
+        // tip as the `lock_time` for anti-fee-sniping purposes
+        lock_time: absolute::LockTime::from_height(chain_tip.height)
+            .unwrap_or(absolute::LockTime::ZERO),
+        input: vec![],
+        output: scenario
+            .recipients
+            .iter()
+            .map(|sr| TxOut {
+                value: sr.amount,
+                script_pubkey: sr.address.clone().assume_checked().script_pubkey(),
+            })
+            .collect(),
     };
 
-    let cs_opts = bdk_coin_select::CoinSelectorOpt {
-        target_feerate: scenario.fee_rate / 4.0,
-        long_term_feerate: scenario.long_term_fee_rate.map(|r| r / 4.0),
-        min_absolute_fee: scenario.min_absolute_fee,
-        min_drain_value: descriptor.dust_value(),
-        ..bdk_coin_select::CoinSelectorOpt::fund_outputs(
-            &output,
-            &change_output,
-            plan.expected_weight() as u32,
-        )
+    let target = bdk_coin_select::Target {
+        feerate: bdk_coin_select::FeeRate::from_sat_per_vb(scenario.fee_rate),
+        min_fee: scenario.min_absolute_fee,
+        value: transaction.output.iter().map(|txo| txo.value).sum(),
     };
 
-    let mut coin_selector = CoinSelector::new(&weighted_candidates, &cs_opts);
+    let drain_weights = bdk_coin_select::DrainWeights {
+        output_weight: {
+            // we calculate the weight difference of including the drain output in the base tx
+            // this method will detect varint size changes of txout count
+            let tx_weight = transaction.weight();
+            let tx_weight_with_drain = {
+                let mut tx = transaction.clone();
+                tx.output.push(TxOut {
+                    script_pubkey: descriptor.at_derivation_index(0).unwrap().script_pubkey(),
+                    ..Default::default()
+                });
+                tx.weight()
+            };
+            (tx_weight_with_drain - tx_weight).to_wu() as u32 - 1
+        },
+        spend_weight: plan.expected_weight() as u32,
+    };
+    let long_term_feerate = bdk_coin_select::FeeRate::from_sat_per_vb(
+        scenario.long_term_fee_rate.unwrap_or(scenario.fee_rate),
+    );
+    type ChangePolicy =
+        dyn Fn(&CoinSelector<'_>, bdk_coin_select::Target) -> bdk_coin_select::Drain;
+    let change_policy: Box<ChangePolicy> = match excess_strategy {
+        CsExcessStrategy::BestStrategy => {
+            Box::new(bdk_coin_select::change_policy::min_value_and_waste(
+                drain_weights,
+                descriptor.dust_value(),
+                long_term_feerate,
+            ))
+        }
+        CsExcessStrategy::ExcessToFee | CsExcessStrategy::ExcessToRecipient => {
+            Box::new(|_, _| bdk_coin_select::Drain::none())
+        }
+        CsExcessStrategy::ExcessToChangeOutput => Box::new(
+            bdk_coin_select::change_policy::min_value(drain_weights, descriptor.dust_value()),
+        ),
+    };
+
+    let mut coin_selector = CoinSelector::new(&candidates, transaction.weight().to_wu() as u32);
 
     // pre-selection
-    for (index, (must_select, _)) in candidates.iter().enumerate() {
+    for (index, (must_select, _)) in raw_candidates.iter().enumerate() {
         if *must_select {
             coin_selector.select(index);
         }
     }
 
-    let selection = match algorithm {
-        CsAlgorithm::Bnb {
-            bnb_rounds,
-            fallback,
-        } => {
-            let final_selector = bdk_coin_select::coin_select_bnb(
-                bdk_coin_select::BnbLimit::Rounds(bnb_rounds),
-                coin_selector.clone(),
-            );
-            match final_selector {
-                Some(coin_selector) => coin_selector.finish(),
-                None if !fallback => return Err(CsSolutionError::NoBnbSolution),
-                None => coin_selector.select_until_finished(),
-            }
+    match &algorithm {
+        CsAlgorithm::Bnb { bnb_rounds, .. } => {
+            let metric = bdk_coin_select::metrics::LowestFee {
+                target,
+                long_term_feerate,
+                change_policy: &change_policy,
+            };
+            if let Err(bnb_err) = coin_selector.run_bnb(metric, *bnb_rounds) {
+                coin_selector.sort_candidates_by_descending_value_pwu();
+                println!(
+                    "Error: {} Falling back to select until target met.",
+                    bnb_err
+                );
+            };
         }
-        CsAlgorithm::SelectUntilFinished { .. } => coin_selector.select_until_finished(),
-    }
-    .map_err(CsSolutionError::SelectionError)?;
-
-    let (excess_strategy_kind, excess_strategy) = match excess_strategy.kind() {
-        None => selection.best_strategy(),
-        Some(kind) => selection
-            .excess_strategies
-            .get_key_value(&kind)
-            .ok_or(CsSolutionError::ExcessStrategyUnavailable(kind))?,
-    };
-    if let Some(change_value) = excess_strategy.drain_value {
-        change_output.value = change_value;
-        output.push(change_output);
-    }
-
-    let selected_candidates = selection.apply_selection(&candidates).collect::<Vec<_>>();
-
-    let input = selected_candidates
-        .iter()
-        .map({
-            let req_sequence = plan.required_sequence();
-            move |(_, txo)| TxIn {
-                previous_output: txo.outpoint,
-                sequence: req_sequence.unwrap_or(Sequence::ENABLE_RBF_NO_LOCKTIME),
-                ..Default::default()
+        CsAlgorithm::SelectUntilFinished { candidate_order } => match candidate_order {
+            CsCandidateOrder::Largest => {
+                coin_selector.sort_candidates_by_key(|(_, c)| Reverse(c.value))
             }
-        })
+            CsCandidateOrder::Smallest => coin_selector.sort_candidates_by_key(|(_, c)| c.value),
+            CsCandidateOrder::Oldest => {
+                coin_selector.sort_candidates_by_key(|(i, _)| raw_candidates[i].1.chain_position)
+            }
+            CsCandidateOrder::Newest => coin_selector
+                .sort_candidates_by_key(|(i, _)| Reverse(raw_candidates[i].1.chain_position)),
+        },
+    };
+
+    // ensure target is met
+    coin_selector
+        .select_until_target_met(target, change_policy(&coin_selector, target))
+        .map_err(CsSolutionError::SelectionError)?;
+
+    // get the selected utxos
+    let selected_txos = coin_selector
+        .apply_selection(&raw_candidates)
         .collect::<Vec<_>>();
 
-    let version = 0x02;
-    let lock_time = LockTime::from_height(chain_tip.height)
-        .unwrap_or(LockTime::ZERO)
-        .into();
+    let drain = change_policy(&coin_selector, target);
+    if drain.is_some() {
+        transaction.output.push(TxOut {
+            value: drain.value,
+            script_pubkey: descriptor.at_derivation_index(0).unwrap().script_pubkey(),
+        });
+    }
 
-    let mut tx = Transaction {
-        version,
-        lock_time,
-        input,
-        output,
-    };
+    // get metrics
+    let waste = coin_selector.waste(target, long_term_feerate, drain, 1.0);
+    let actual_feerate = coin_selector.implied_feerate(target.value, drain);
 
-    let prevouts = selected_candidates
+    // fill transaction inputs
+    transaction.input = selected_txos
         .iter()
-        .map(|(_, txo)| txo.txout.clone())
+        .map(|(_, utxo)| TxIn {
+            previous_output: utxo.outpoint,
+            sequence: plan
+                .required_sequence()
+                .unwrap_or(Sequence::ENABLE_RBF_NO_LOCKTIME),
+            ..Default::default()
+        })
+        .collect();
+
+    let prevouts = selected_txos
+        .iter()
+        .map(|(_, utxo)| utxo.txout.clone())
         .collect::<Vec<_>>();
     let sighash_prevouts = Prevouts::All(&prevouts);
 
-    let _tmp_tx = tx.clone();
-    let mut sighash_cache = SighashCache::new(&_tmp_tx);
+    // create a short lived transaction
+    let _sighash_tx = transaction.clone();
+    let mut sighash_cache = SighashCache::new(&_sighash_tx);
 
     let requirements = plan.requirements();
-    for (i, input) in tx.input.iter_mut().enumerate() {
+    for (i, txin) in transaction.input.iter_mut().enumerate() {
         let mut auth_data = bdk_tmp_plan::SatisfactionMaterial::default();
         assert!(
             !requirements.requires_hash_preimages(),
@@ -456,37 +498,38 @@ pub fn create_spend_solution(
                 final_script_witness,
             } => {
                 if let Some(witness) = final_script_witness {
-                    input.witness = witness;
+                    txin.witness = witness;
                 }
 
                 if let Some(script_sig) = final_script_sig {
-                    input.script_sig = script_sig;
+                    txin.script_sig = script_sig;
                 }
             }
-            bdk_tmp_plan::PlanState::Incomplete(_) => panic!("plan data should all be provided"),
+            bdk_tmp_plan::PlanState::Incomplete(_) => {
+                panic!("plan should be complete");
+            }
         }
     }
 
     let metrics = CsMetrics {
-        waste: excess_strategy.waste,
+        waste: waste.abs() as _,
         feerate_deviation: {
             let req_rate = scenario.fee_rate;
-            let actual_rate = excess_strategy.feerate() * 4.0;
-            actual_rate - req_rate
+            actual_feerate.as_sat_vb() - req_rate
         },
-        used_excess_strategy: CsExcessStrategy::from_kind(*excess_strategy_kind),
-        tx_size: tx.vsize() as _,
+        used_excess_strategy: CsExcessStrategy::from_drain(&drain),
+        tx_size: transaction.vsize() as _,
     };
 
-    Ok((tx, metrics))
+    Ok((transaction, metrics))
 }
 
 #[derive(Debug, Clone)]
 pub enum CsSolutionError {
     NoChainTip,
-    NoBnbSolution,
-    ExcessStrategyUnavailable(bdk_coin_select::ExcessStrategyKind),
-    SelectionError(bdk_coin_select::SelectionError),
+    // NoBnbSolution,
+    // ExcessStrategyUnavailable(bdk_coin_select::ExcessStrategyKind),
+    SelectionError(bdk_coin_select::InsufficientFunds),
     SigningError(bdk_tmp_plan::SigningError),
 }
 
