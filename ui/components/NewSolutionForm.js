@@ -74,10 +74,10 @@ const NewSolutionForm = ({
             waste
           </option>
           <option
-            value="lowest fee"
+            value="lowest_fee"
             selected={bnbParameters?.metric === "lowest_fee"}
           >
-            lowest_fee
+            lowest fee
           </option>
         </select>
       </div>
