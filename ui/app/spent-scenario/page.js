@@ -20,12 +20,12 @@ const SpentScenario = () => {
   const [recipients, setRecipients] = useState([]);
   const [coinSelectionParameters, setCoinSelectionParameters] = useState({
     minAbsoluteFee: 0,
-    freeRate: 1.0,
-    longTermFreeRate: 5.0,
+    feeRate: 5.0,
+    longTermFeeRate: 1.0,
   });
   const [selectionAlgorithm, setSelectionAlgorithm] = useState("bnb");
   const [bnbParameters, setBnbParameters] = useState({
-    bnb_rounds: 4200,
+    bnb_rounds: 42000,
     fallback: true,
   });
   const [excessStrategy, setExcessStrategy] = useState("best_strategy");
@@ -33,7 +33,7 @@ const SpentScenario = () => {
   const [isDone, setIsDone] = useState(undefined);
   const [useLongTerm, setUseLongTerm] = useState(false);
 
-  const newRecipient = { address: "", amount: 0 };
+  const newRecipient = { address: "", amount: "" };
   const handleAddRecipientsClick = useCallback(() => {
     setRecipients((prev) => [...prev, newRecipient]);
   }, []);
@@ -45,9 +45,9 @@ const SpentScenario = () => {
           ? undefined
           : [...recipients],
       min_absolute_fee: coinSelectionParameters.minAbsoluteFee,
-      fee_rate: coinSelectionParameters.freeRate,
+      fee_rate: coinSelectionParameters.feeRate,
       long_term_fee_rate: useLongTerm
-        ? coinSelectionParameters.longTermFreeRate
+        ? coinSelectionParameters.longTermFeeRate
         : undefined,
     };
 
@@ -74,9 +74,9 @@ const SpentScenario = () => {
     useLongTerm,
   ]);
 
-  const handleChangeFreeRateParameters = useCallback(
+  const handleChangeFeeRateParameters = useCallback(
     (e) => {
-      coinSelectionParameters.freeRate = Number(e.target.value);
+      coinSelectionParameters.feeRate = Number(e.target.value);
       setCoinSelectionParameters({ ...coinSelectionParameters });
     },
     [coinSelectionParameters],
@@ -90,9 +90,9 @@ const SpentScenario = () => {
     [coinSelectionParameters],
   );
 
-  const handleChangeLongTermFreeRateParameters = useCallback(
+  const handleChangeLongTermFeeRateParameters = useCallback(
     (e) => {
-      coinSelectionParameters.longTermFreeRate = Number(e.target.value);
+      coinSelectionParameters.longTermFeeRate = Number(e.target.value);
       setCoinSelectionParameters({ ...coinSelectionParameters });
     },
     [coinSelectionParameters],
@@ -178,9 +178,7 @@ const SpentScenario = () => {
 
   const handleSwitchEditMode = useCallback(() => {
     setIsDone(false);
-    setSolution([]);
-  }, [setIsDone, setSolution]);
-  console.log("recipients", recipients);
+  }, [setIsDone]);
   return (
     <div className="w-full flex gap-6 flex-col frame_padding">
       <div className="w-full flex justify-between">
@@ -212,7 +210,7 @@ const SpentScenario = () => {
           <div className="flex gap-4 items-start">
             <span>Recipient:</span>
             <button
-              className="icon_button disabled:text-gray-400 disabled:bg-gray-200 disabled:cursor-not-allowed disabled:border-gray-500"
+              className="icon_button"
               onClick={handleAddRecipientsClick}
               disabled={isDone === true}
             >
@@ -241,17 +239,17 @@ const SpentScenario = () => {
                 <CheckboxField
                   label="Feerate:"
                   unit="sats / vbytes"
-                  checked
+                  checkedh
                   disableCheckbox
                   disableInput={isDone}
-                  onChange={handleChangeFreeRateParameters}
-                  value={coinSelectionParameters.freeRate}
+                  onChange={handleChangeFeeRateParameters}
+                  value={coinSelectionParameters.feeRate}
                 />
                 <CheckboxField
                   label="Long Term Feerate:"
                   unit="sats / vbytes"
-                  onChange={handleChangeLongTermFreeRateParameters}
-                  value={coinSelectionParameters.longTermFreeRate}
+                  onChange={handleChangeLongTermFeeRateParameters}
+                  value={coinSelectionParameters.longTermFeeRate}
                   checked={useLongTerm}
                   onToggleCheck={setUseLongTerm}
                   disableCheckbox={isDone}
@@ -280,7 +278,11 @@ const SpentScenario = () => {
       <div>
         <div className="section_title_cap flex justify-between">
           Solution:
-          <button className="icon_button" onClick={handleAddSolutionClick}>
+          <button
+            className="icon_button"
+            onClick={handleAddSolutionClick}
+            disabled={recipients.length === 0}
+          >
             <RiAddFill className="hover:text-h5" />
           </button>
         </div>
@@ -294,6 +296,7 @@ const SpentScenario = () => {
                 <button
                   className="icon_button"
                   onClick={handleAddSolutionClick}
+                  disabled={recipients.length === 0}
                 >
                   <RiAddFill className="hover:text-h5" />
                 </button>

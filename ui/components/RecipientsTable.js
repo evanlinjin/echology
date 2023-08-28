@@ -19,22 +19,23 @@ const RecipientsTable = ({
       <table className="main_table">
         <thead>
           <tr>
-            <th>-</th>
+            <th className="w-[20px]">-</th>
             {headers.map((header) => (
               <TableHead
                 label={header.label}
                 desc={header.desc}
                 key={header.label}
+                maxWidth={200}
               />
             ))}
-            <th>-</th>
+            <th className="w-[20px]">-</th>
           </tr>
         </thead>
         <tbody>
           {recipients.length > 0 &&
             recipients.map((recipient, index) => (
               <tr className="hover" key={`recipient-${index}`}>
-                <th>{index}</th>
+                <td>{index}</td>
                 <td>
                   <input
                     key={`address-${index}`}
@@ -51,8 +52,7 @@ const RecipientsTable = ({
                     id={index}
                     key={`amount-${index}`}
                     value={recipient.amount}
-                    type="text"
-                    pattern="[0-9]*"
+                    type="number"
                     className="input_field w-full"
                     onChange={onChangeRecipientAmount}
                     disabled={isDone === true}
@@ -64,7 +64,7 @@ const RecipientsTable = ({
                     onClick={onDeleteRecipient}
                     className="flex items-center justify-center hover:bg-gray-500 rounded-full hover:text-white disabled:text-gray-400 disabled:bg-gray-200 disabled:cursor-not-allowed"
                   >
-                    <div className="grid place-items-center h-full w-full ">
+                    <div className="grid place-items-center h-full">
                       <RiCloseFill id={index} />
                     </div>
                   </button>
