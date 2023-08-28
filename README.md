@@ -189,3 +189,9 @@ Response Body:
     }
 }
 ```
+
+## Admin API Docs
+
+### POST `/admin/mine?enable={true|false}`
+
+### POST `/admin/mine`

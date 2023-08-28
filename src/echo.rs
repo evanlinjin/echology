@@ -1,4 +1,10 @@
-use std::collections::BTreeMap;
+use std::{
+    collections::BTreeMap,
+    sync::{
+        atomic::{self, AtomicBool},
+        mpsc::SyncSender,
+    },
+};
 
 use async_std::{
     sync::{Arc, RwLock},
@@ -11,7 +17,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::wally::Wally;
 
-pub type EchologyJoinHandles = [JoinHandle<tide::Result<()>>; 3];
+pub type EchologyJoinHandles = [JoinHandle<tide::Result<()>>; 4];
 
 #[derive(Debug, Default, Clone, Deserialize, Serialize)]
 pub struct NetworkStats {
@@ -26,6 +32,8 @@ pub struct Echology {
     pub stats: Arc<RwLock<NetworkStats>>,
     pub chain: Arc<RwLock<LocalChain>>,
     pub wallets: Arc<RwLock<BTreeMap<String, Arc<RwLock<Wally>>>>>,
+    pub mine_tx: Arc<SyncSender<()>>,
+    pub mine_flag: Arc<AtomicBool>,
 }
 
 impl Echology {
@@ -45,11 +53,15 @@ impl Echology {
             bdk_bitcoind_rpc::bitcoincore_rpc::Auth::CookieFile(d.params.cookie_file.clone());
         let (tx, rx) = std::sync::mpsc::sync_channel::<bdk_bitcoind_rpc::EmittedUpdate>(10);
 
+        let (mine_tx, mine_rx) = std::sync::mpsc::sync_channel::<()>(10);
+
         let echology = Self {
             bitcoind: Arc::new(d),
             stats: Arc::new(RwLock::new(NetworkStats::default())),
             chain: Arc::new(RwLock::new(local_chain)),
             wallets: Default::default(),
+            mine_tx: Arc::new(mine_tx),
+            mine_flag: Arc::new(AtomicBool::new(true)),
         };
 
         let emitter_jh = async_std::task::spawn_blocking(move || -> tide::Result<()> {
@@ -90,6 +102,7 @@ impl Echology {
 
         let absorber_jh = {
             let echology = echology.clone();
+
             async_std::task::spawn(async move {
                 for update in rx {
                     let utxo_inc_jh = if let EmittedUpdate::Block(block) = &update {
@@ -125,7 +138,6 @@ impl Echology {
                         let _ = wallet
                             .indexed_tx_graph
                             .insert_relevant_txs(graph_update.clone());
-                        // .apply_update(local_update.graph.clone());
                     }
 
                     if let Some(inc) = utxo_inc_jh {
@@ -134,6 +146,19 @@ impl Echology {
                 }
 
                 tide::Result::Ok(())
+            })
+        };
+
+        let miner_ctrl_jh = {
+            let echology = echology.clone();
+            async_std::task::spawn_blocking(move || -> tide::Result<()> {
+                loop {
+                    std::thread::sleep(std::time::Duration::from_secs(blocktime));
+                    let mine_enabled = echology.mine_flag.load(atomic::Ordering::Acquire);
+                    if mine_enabled {
+                        echology.mine_tx.send(())?;
+                    }
+                }
             })
         };
 
@@ -151,8 +176,7 @@ impl Echology {
                     hashes.last().unwrap()
                 );
 
-                loop {
-                    std::thread::sleep(std::time::Duration::from_secs(blocktime));
+                for _ in mine_rx {
                     let hashes = echology
                         .bitcoind
                         .client
@@ -161,10 +185,12 @@ impl Echology {
                         tide::log::info!("[miner] found block: {}", hash);
                     }
                 }
+
+                Ok(())
             })
         };
 
-        Ok((echology, [emitter_jh, absorber_jh, miner_jh]))
+        Ok((echology, [emitter_jh, absorber_jh, miner_ctrl_jh, miner_jh]))
     }
 
     pub async fn get_or_create_wallet(&self, phrase: &str) -> tide::Result<Arc<RwLock<Wally>>> {
