@@ -65,7 +65,7 @@
 }
 
 .main_button {
-    @apply btn main_background rounded-none py-2.5 px-2.5  border border-black whitespace-nowrap h-fit font-medium capitalize hover:cursor-pointer disabled:cursor-not-allowed disabled:text-gray-500
+    @apply btn main_background rounded-none py-2.5 px-2.5 border border-black whitespace-nowrap h-fit font-medium capitalize hover:cursor-pointer disabled:cursor-not-allowed disabled:text-gray-500
 }
 
 .black_button {
@@ -73,7 +73,7 @@
 }
 
 .icon_button {
-    @apply main_background rounded-full h-6 w-6 border border-black whitespace-nowrap flex items-center justify-center hover:bg-gray-400 hover:text-white
+    @apply h-6 w-6 main_background rounded-full border border-black whitespace-nowrap flex items-center justify-center hover:bg-gray-400 hover:text-white
 }
 
 .nav_button_square {

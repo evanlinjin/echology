@@ -183,7 +183,7 @@ const SpentScenario = () => {
   }, [setIsDone]);
   return (
     <div className="w-full flex gap-6 flex-col frame_padding">
-      <div className="w-full flex justify-between">
+      <div className="w-full flex justify-between flex-wrap gap-4">
         <Link href={"/coin-control"} className="main_button">
           <IoChevronBackOutline />
           Back To Coin Control
