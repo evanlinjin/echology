@@ -12,7 +12,7 @@ const WelcomePage = () => {
     try {
       setCookie("alias", userInput);
       const result = await GET(
-        `http://localhost:8080/api/wallet/${userInput}/address`,
+        `${process.env.NEXT_PUBLIC_URI}/api/wallet/${userInput}/address`,
       );
       if (result.address) {
         setCookie("address", result.address);

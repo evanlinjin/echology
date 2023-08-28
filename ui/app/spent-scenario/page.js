@@ -53,7 +53,7 @@ const SpentScenario = () => {
     };
 
     POST(
-      `http://localhost:8080/api/wallet/${Cookies.get(
+      `${process.env.NEXT_PUBLIC_URI}/api/wallet/${Cookies.get(
         "alias",
       )}/new_spend_scenario`,
       body,
@@ -122,7 +122,7 @@ const SpentScenario = () => {
       body = bodySuf;
     }
     POST(
-      `http://localhost:8080/api/wallet/${Cookies.get("alias")}/new_solution`,
+      `${process.env.NEXT_PUBLIC_URI}/api/wallet/${Cookies.get("alias")}/new_solution`,
       body,
     )
       .then((result) => {

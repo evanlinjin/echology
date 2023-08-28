@@ -29,7 +29,7 @@ const CoinControl = () => {
   const [selectAllAs, setSelectAllTo] = useState(undefined);
 
   useEffect(() => {
-    GET(`http://localhost:8080/api/wallet/${Cookies.get("alias")}/coins`).then(
+    GET(`${process.env.NEXT_PUBLIC_URI}/api/wallet/${Cookies.get("alias")}/coins`).then(
       (result) => {
         const data = result.coins;
         let spentCoins = [];

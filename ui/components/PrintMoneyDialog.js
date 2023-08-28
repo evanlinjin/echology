@@ -23,7 +23,7 @@ const PrintMoneyDialog = () => {
     } else {
       try {
         await GET(
-          `http://localhost:8080/api/faucet?address=${address}&amount=${selectedCoinValueRange.value}&count=${selectedCoinCounts}`,
+          `${process.env.NEXT_PUBLIC_URI}/api/faucet?address=${address}&amount=${selectedCoinValueRange.value}&count=${selectedCoinCounts}`,
         );
         setIsLoading(true);
         setTimeout(() => window?.location.reload(), 1000);

@@ -27,7 +27,7 @@ const SolutionTable = ({ solutions }) => {
   const [showCopied, setShowCopied] = useState(false);
 
   const handleBroadcast = useCallback((hex) => {
-    POST(`http://localhost:8080/api/network/broadcast?tx=${hex}`).then(
+    POST(`${process.env.NEXT_PUBLIC_URI}/api/network/broadcast?tx=${hex}`).then(
       (result) => {
         if (result.error) {
           setErrorMessage(result.error);
@@ -39,7 +39,7 @@ const SolutionTable = ({ solutions }) => {
   }, []);
 
   const handleGetMoreDetails = useCallback((hex) => {
-    GET(`http://localhost:8080/api/decode?tx=${hex}`)
+    GET(`${process.env.NEXT_PUBLIC_URI}/api/decode?tx=${hex}`)
       .then((result) => {
         if (result.error) {
           setErrorMessage(result.error);

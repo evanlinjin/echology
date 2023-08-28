@@ -13,7 +13,7 @@ const Nav = () => {
   const { address, setAddress } = useCoinContext();
 
   useEffect(() => {
-    GET("http://localhost:8080/api/network/stats").then((result) => {
+    GET(`${process.env.NEXT_PUBLIC_URI}/api/network/stats`).then((result) => {
       const data = Object.entries(result).map(([key, value]) => {
         const newKey = key.replaceAll("_", " ");
         return [`${newKey}`, value];
