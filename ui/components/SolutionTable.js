@@ -7,6 +7,7 @@ import Link from "next/link";
 import { IoChevronBackOutline } from "react-icons/io5";
 import TableHead from "@components/TableHead";
 import { useCoinContext } from "@app/context/coins";
+import { CopyToClipboard } from "@node_modules/react-copy-to-clipboard";
 
 const SolutionTable = ({ solutions }) => {
   const { setErrorMessage } = useCoinContext();
@@ -23,6 +24,8 @@ const SolutionTable = ({ solutions }) => {
     "Feerate",
   ];
   const [details, setDetails] = useState("");
+  const [showCopied, setShowCopied] = useState(false);
+
   const handleBroadcast = useCallback((hex) => {
     POST(`http://localhost:8080/api/network/broadcast?tx=${hex}`).then(
       (result) => {
@@ -64,8 +67,22 @@ const SolutionTable = ({ solutions }) => {
               return (
                 <tr className="hover" key={`solution${txid}:${index}`}>
                   <td>{index}</td>
-                  <td className="input_field break-words overflow-x-scroll max-w-[321px]">
-                    {txid}
+                  <td
+                    data-tip="Copied!"
+                    className={`input_field break-words overflow-x-scroll max-w-[321px] h-[86px] ${
+                      showCopied && "tooltip tooltip-left"
+                    }`}
+                  >
+                    <CopyToClipboard
+                      text={txid}
+                      onCopy={() => {
+                        setShowCopied(true);
+                        setTimeout(() => setShowCopied(false), 1000);
+                      }}
+                      className="relative max-w-[550px] hover:cursor-pointer overflow-x-scroll"
+                    >
+                      <span>{txid}</span>
+                    </CopyToClipboard>
                   </td>
                   {request?.algorithm ? (
                     <td className="input_field capitalize max-w-[150px]">
