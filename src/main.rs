@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::sync::atomic;
 
 use bdk_bitcoind_rpc::bitcoincore_rpc::jsonrpc::serde_json::Value;
 use bdk_bitcoind_rpc::bitcoincore_rpc::RawTx;
@@ -57,6 +58,7 @@ async fn main() -> tide::Result<()> {
         .post(wallet_new_spend_scenario);
     app.at("/api/wallet/:alias/new_solution")
         .post(wallet_new_solution);
+    app.at("/api/admin/mine").post(admin_mine);
 
     if let Some(dir) = env_static {
         app.at("/").serve_file(
@@ -252,4 +254,20 @@ async fn wallet_new_solution(mut req: Request<Echology>) -> tide::Result {
         metrics,
     })
     .into())
+}
+
+async fn admin_mine(req: Request<Echology>) -> tide::Result {
+    #[derive(Debug, Deserialize)]
+    #[allow(dead_code)]
+    struct Query {
+        pub enable: Option<bool>,
+    }
+    let q: Query = req.query()?;
+    let state = req.state();
+    match q.enable {
+        Some(enable) => state.mine_flag.store(enable, atomic::Ordering::Release),
+        None => state.mine_tx.send(())?,
+    }
+    println!("got query: {:?}", q);
+    Ok(json!({ "success": true }).into())
 }
