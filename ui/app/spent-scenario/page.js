@@ -27,6 +27,7 @@ const SpentScenario = () => {
   const [bnbParameters, setBnbParameters] = useState({
     bnb_rounds: 42000,
     fallback: true,
+    metric: "waste",
   });
   const [excessStrategy, setExcessStrategy] = useState("best_strategy");
   const [candidateOrder, setCandidateOrder] = useState("largest_first");
@@ -105,6 +106,7 @@ const SpentScenario = () => {
       algorithm: "bnb",
       parameters: { ...bnbParameters },
       excess_strategy: excessStrategy,
+      metric: "waste",
     };
     const bodySuf = {
       spend_scenario_id: spentScenarioId,

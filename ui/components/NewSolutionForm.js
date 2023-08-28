@@ -13,7 +13,6 @@ const NewSolutionForm = ({
 }) => {
   const handleChangeAlgorithm = useCallback(
     (e) => {
-      console.log("handleChangeAlgorithm", e.target.value);
       setSelectionAlgorithm(e.target.value);
     },
     [setSelectionAlgorithm],
@@ -39,6 +38,13 @@ const NewSolutionForm = ({
     setBnbParameters({ ...bnbParameters, fallback: !prev });
   }, [bnbParameters, setBnbParameters]);
 
+  const handleChangeBnbMetric = useCallback(
+    (e) => {
+      setBnbParameters({ ...bnbParameters, metric: e.target.value });
+    },
+    [bnbParameters, setBnbParameters],
+  );
+
   const handleChangeExcessStrategy = useCallback(
     (e) => {
       setExcessStrategy(e.target.value);
@@ -57,10 +63,28 @@ const NewSolutionForm = ({
         />
         <span className="whitespace-nowrap">rounds</span>
       </div>
+      <div className="flex gap-3 items-start flex-col">
+        <span className="whitespace-nowrap">Metric:</span>
+        <select
+          defaultValue="waste"
+          className="select select-bordered main_background rounded-none whitespace-nowrap border border-black w-full"
+          onChange={handleChangeBnbMetric}
+        >
+          <option value="waste" selected={bnbParameters?.metric === "waste"}>
+            waste
+          </option>
+          <option
+            value="lowest_fee"
+            selected={bnbParameters?.metric === "lowest_fee"}
+          >
+            lowest_fee
+          </option>
+        </select>
+      </div>
       <div className="flex gap-3 items-center">
         <input
           type="checkbox"
-          checked={bnbParameters.fallback}
+          checked={bnbParameters?.fallback}
           className="checkbox rounded-none"
           onChange={handleChangeBnbFallback}
         />
@@ -70,11 +94,11 @@ const NewSolutionForm = ({
   );
 
   const sufParametersFields = (
-    <div className="frame_padding main_frame">
+    <div className="frame_padding main_frame flex gap-4 flex-col">
       <span className="whitespace-nowrap">Candidate Order:</span>
       <select
         defaultValue="largest_first"
-        className="select select-bordered rounded-none main_background rounded-none whitespace-nowrap border border-black w-full"
+        className="select select-bordered main_background rounded-none whitespace-nowrap border border-black w-full"
         onChange={handleChangeCandidateOrder}
       >
         <option
@@ -99,7 +123,7 @@ const NewSolutionForm = ({
           <span className="whitespace-nowrap">Coin Selection Algorithm:</span>
           <select
             defaultValue="bnb"
-            className="select select-bordered rounded-none main_background rounded-none whitespace-nowrap border border-black w-full"
+            className="select select-bordered main_background rounded-none whitespace-nowrap border border-black w-full"
             onChange={handleChangeAlgorithm}
           >
             <option value="bnb" selected={selectionAlgorithm === "bnb"}>
@@ -118,7 +142,7 @@ const NewSolutionForm = ({
           <span className="whitespace-nowrap">Excess Strategy:</span>
           <select
             defaultValue="best_strategy"
-            className="select select-bordered rounded-none main_background rounded-none whitespace-nowrap border border-black w-full"
+            className="select select-bordered main_background rounded-none whitespace-nowrap border border-black w-full"
             onChange={handleChangeExcessStrategy}
           >
             <option
