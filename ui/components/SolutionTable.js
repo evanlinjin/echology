@@ -170,13 +170,13 @@ const SolutionTable = ({ solutions }) => {
           <button>close</button>
         </form>
       </dialog>
-      <dialog id="more_detail_modal" className="modal">
+      <dialog id="more_detail_modal" className="modal open">
         <form
           method="dialog"
           className="modal-box w-11/12 max-w-5xl h-max rounded-none"
         >
           <h3 className="font-bold text-lg">More Details</h3>
-          <p className="py-4">{JSON.stringify(details)}</p>
+          <pre className="py-4">{JSON.stringify(details, null, 2)}</pre>
         </form>
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
