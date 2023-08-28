@@ -252,9 +252,10 @@ const SpentScenario = () => {
                   unit="sats / vbytes"
                   onChange={handleChangeLongTermFreeRateParameters}
                   value={coinSelectionParameters.longTermFreeRate}
-                  disableInput={isDone}
                   checked={useLongTerm}
                   onToggleCheck={setUseLongTerm}
+                  disableCheckbox={isDone}
+                  disableInput={isDone}
                 />
               </div>
             </div>
