@@ -17,8 +17,6 @@ const PrintMoneyDialog = () => {
   const [selectedCoinValueRange, setSelectedCoinValueRange] =
     useState(COIN_VALUE_RANGE_1);
   const [selectedCoinCounts, setSelectedCoinCounts] = useState(5);
-  console.log("selectedCoinCounts", selectedCoinCounts);
-  console.log("selectedCoinValueRange", selectedCoinValueRange);
   const handleGetFreeMoney = useCallback(async () => {
     if (!address) {
       getAddress().then();

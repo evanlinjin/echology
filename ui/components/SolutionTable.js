@@ -63,7 +63,6 @@ const SolutionTable = ({ solutions }) => {
         <tbody>
           {solutions.length > 0 &&
             solutions.map((solution, index) => {
-              console.log("solutions", solutions);
               const { txid, request, raw_tx } = solution;
               return (
                 <tr className="hover" key={`solution${txid}:${index}`}>

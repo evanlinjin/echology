@@ -74,7 +74,7 @@ const NewSolutionForm = ({
             waste
           </option>
           <option
-            value="lowest_fee"
+            value="lowest fee"
             selected={bnbParameters?.metric === "lowest_fee"}
           >
             lowest_fee

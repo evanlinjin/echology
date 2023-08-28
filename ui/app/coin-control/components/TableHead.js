@@ -44,7 +44,7 @@ const Index = ({ label, desc, sort }) => {
     coinsToView.forEach((coin) => {
       const { spent_by } = coin;
       if (!spent_by) {
-        unspentCoins.push({ ...coin, must_select: false });
+        unspentCoins.push({ ...coin });
       } else {
         spentCoins.push({ ...coin, must_select: null });
       }
@@ -60,8 +60,7 @@ const Index = ({ label, desc, sort }) => {
       }
     });
     setCoinsToView([...unspentCoins, ...sortedSpentCoins]);
-  }, []);
-
+  }, [coinsToView, setCoinsToView]);
   const handleSort = () => {
     switch (label) {
       case TABLE_HEAD_VALUE_OUTPOINTS.label:
@@ -76,6 +75,8 @@ const Index = ({ label, desc, sort }) => {
       default:
     }
   };
+  console.log("coinsToView", coinsToView);
+
   return (
     <TableHead
       label={label}
