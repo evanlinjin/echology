@@ -25,7 +25,6 @@ const RecipientsTable = ({
                 label={header.label}
                 desc={header.desc}
                 key={header.label}
-                maxWidth={200}
               />
             ))}
             <th className="w-[20px]">-</th>
