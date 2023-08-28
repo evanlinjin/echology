@@ -44,9 +44,23 @@ impl Echology {
         auth: &Auth,
         blocktime: u64,
     ) -> tide::Result<(Self, EchologyJoinHandles)> {
-        let client = bdk_bitcoind_rpc::bitcoincore_rpc::Client::new(rpc_url, auth.clone())?;
-
         tide::log::start();
+
+        // create wallet (if not exist)
+        let client = {
+            let client = bdk_bitcoind_rpc::bitcoincore_rpc::Client::new(rpc_url, auth.clone())?;
+            if client
+                .create_wallet("default", None, None, None, None)
+                .is_err()
+            {
+                client.load_wallet("default")?;
+            }
+            bdk_bitcoind_rpc::bitcoincore_rpc::Client::new(
+                &format!("{}/wallet/default", rpc_url),
+                auth.clone(),
+            )?
+        };
+
         // local chain
         let genesis_hash = client.get_block_hash(0)?;
         let local_chain = LocalChain::from_blocks([(0, genesis_hash)].into());
