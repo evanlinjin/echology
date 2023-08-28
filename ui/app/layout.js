@@ -24,12 +24,12 @@ const ibmPlexMonoLocal = localFont({
   ],
 });
 
-const ibmPlexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-ibmPlexMono",
-  weight: ["100", "200", "300", "400", "500", "600", "700"],
-});
+// const ibmPlexMono = IBM_Plex_Mono({
+//   subsets: ["latin"],
+//   display: "swap",
+//   variable: "--font-ibmPlexMono",
+//   weight: ["100", "200", "300", "400", "500", "600", "700"],
+// });
 
 export const metadata = {
   title: "Echology",
@@ -40,7 +40,8 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${ibmPlexMono.className} ${ibmPlexMonoLocal.className} tracking-[1px]`}
+      // className={`${ibmPlexMono.className} ${ibmPlexMonoLocal.className} tracking-[1px]`}
+      className={`${ibmPlexMonoLocal.className} tracking-[1px]`}
     >
       <head>
         <title>Echology</title>

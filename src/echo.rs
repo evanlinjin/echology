@@ -55,7 +55,12 @@ impl Echology {
                 .create_wallet("default", None, None, None, None)
                 .is_err()
             {
-                temp_client.load_wallet("default")?;
+                if let Err(err) = temp_client.load_wallet("default") {
+                    if !matches!(&err, bdk_bitcoind_rpc::bitcoincore_rpc::Error::JsonRpc(bdk_bitcoind_rpc::bitcoincore_rpc::jsonrpc::Error::Rpc(json_rpc_err)) if json_rpc_err.code == -35)
+                    {
+                        return Err(err.into());
+                    }
+                };
             }
             bdk_bitcoind_rpc::bitcoincore_rpc::Client::new(rpc_url, auth.clone())?
         };
