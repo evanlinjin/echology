@@ -22,6 +22,7 @@ echo "start: bitcoind"
     --datadir="${BITCOIND_DATADIR}" \
     --daemonwait \
     --txindex \
+    --fallbackfee=0.00001 \
     --port=18444 \
     --chain=regtest \
     --rpcport=18443 \
