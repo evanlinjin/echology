@@ -150,6 +150,7 @@ Request Body:
 * Parameters for `"algorithm": "bnb"`:
     ```json
     {
+        "metric": "waste", // valid values: "waste", "lowest_fee"
         // UI text: Rounds of branch and bound
         "bnb_round": 2000,
         // UI text: Use fallback algorithm?

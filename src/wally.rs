@@ -34,6 +34,8 @@ use std::collections::HashMap;
 use tide::prelude::*;
 use tide::StatusCode;
 
+type ChangePolicy = dyn Fn(&CoinSelector<'_>, bdk_coin_select::Target) -> bdk_coin_select::Drain;
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Coin {
     pub outpoint: OutPoint,
@@ -54,9 +56,9 @@ pub struct Scenario {
     pub candidates: Vec<ScenarioCandidate>,
     #[serde(default)]
     pub recipients: Vec<ScenarioRecipient>,
-    pub fee_rate: f32, // sats per wu
+    pub fee_rate: f32, // sats per vb
     #[serde(default)]
-    pub long_term_fee_rate: Option<f32>, // sats per wu
+    pub long_term_fee_rate: Option<f32>, // sats per vb
     pub min_absolute_fee: u64, // sats
 }
 
@@ -92,10 +94,29 @@ pub enum CsCandidateOrder {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum CsBnbMetric {
+    #[serde(rename = "waste")]
+    Waste,
+    #[serde(rename = "lowest_fee")]
+    LowestFee,
+}
+
+impl Default for CsBnbMetric {
+    fn default() -> Self {
+        Self::Waste
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "algorithm", content = "parameters")]
 pub enum CsAlgorithm {
     #[serde(rename = "bnb")]
-    Bnb { bnb_rounds: usize, fallback: bool },
+    Bnb {
+        #[serde(default = "CsBnbMetric::default")]
+        metric: CsBnbMetric,
+        bnb_rounds: usize,
+        fallback: bool,
+    },
     #[serde(rename = "select_until_finished")]
     SelectUntilFinished { candidate_order: CsCandidateOrder },
 }
@@ -124,9 +145,11 @@ impl CsExcessStrategy {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CsMetrics {
-    pub waste: i64,
-    pub feerate_deviation: f32,
-    pub tx_size: u32,
+    pub waste: f32,
+    pub fee: u64,               //sats
+    pub feerate: f32,           // in sats/vb
+    pub feerate_deviation: f32, // in sats/vb
+    pub tx_size: u32,           // in vb
     pub used_excess_strategy: CsExcessStrategy,
 }
 
@@ -220,7 +243,10 @@ impl Wally {
                     StatusCode::BadRequest,
                     anyhow!(
                         "address {} is not valid for network {}",
-                        recipient.address.clone().assume_checked(),
+                        recipient
+                            .address
+                            .clone()
+                            .require_network(Network::Regtest)?,
                         Network::Regtest
                     ),
                 ));
@@ -275,6 +301,7 @@ pub fn create_spend_solution(
         keys: keymap.iter().map(|(pk, _)| pk.clone()).collect(),
         ..Default::default()
     };
+
     let plan =
         bdk_tmp_plan::plan_satisfaction(&descriptor.at_derivation_index(0).unwrap(), &assets)
             .expect("must have plan");
@@ -301,31 +328,6 @@ pub fn create_spend_solution(
         })
         .collect::<Vec<_>>();
 
-    // // sort candidates if algorithm requires it
-    // if let CsAlgorithm::SelectUntilFinished { candidate_order } = &algorithm {
-    //     match candidate_order {
-    //         CsCandidateOrder::LargestFirst => {
-    //             raw_candidates.sort_by_key(|(_, txo)| std::cmp::Reverse(txo.txout.value))
-    //         }
-    //         CsCandidateOrder::SmallestFirst => raw_candidates.sort_by_key(|(_, txo)| txo.txout.value),
-    //         CsCandidateOrder::OldestFirst => raw_candidates.sort_by_key(|(_, txo)| txo.chain_position),
-    //         CsCandidateOrder::NewestFirst => {
-    //             raw_candidates.sort_by_key(|(_, txo)| std::cmp::Reverse(txo.chain_position))
-    //         }
-    //     }
-    // }
-
-    // let weighted_candidates = raw_candidates
-    //     .iter()
-    //     .map(|(_, utxo)| {
-    //         WeightedValue::new(
-    //             utxo.txout.value,
-    //             plan.expected_weight() as _,
-    //             plan.witness_version().is_some(),
-    //         )
-    //     })
-    //     .collect::<Vec<_>>();
-
     let mut transaction = Transaction {
         version: 0x02,
         // because the temporary planning module does not support timelocks, we can use the chain
@@ -349,6 +351,10 @@ pub fn create_spend_solution(
         value: transaction.output.iter().map(|txo| txo.value).sum(),
     };
 
+    let long_term_feerate = bdk_coin_select::FeeRate::from_sat_per_vb(
+        scenario.long_term_fee_rate.unwrap_or(scenario.fee_rate),
+    );
+
     let drain_weights = bdk_coin_select::DrainWeights {
         output_weight: {
             // we calculate the weight difference of including the drain output in the base tx
@@ -366,12 +372,7 @@ pub fn create_spend_solution(
         },
         spend_weight: plan.expected_weight() as u32,
     };
-    let long_term_feerate = bdk_coin_select::FeeRate::from_sat_per_vb(
-        scenario.long_term_fee_rate.unwrap_or(scenario.fee_rate),
-    );
-    type ChangePolicy =
-        dyn Fn(&CoinSelector<'_>, bdk_coin_select::Target) -> bdk_coin_select::Drain;
-    let change_policy: Box<ChangePolicy> = match excess_strategy {
+    let drain_policy: Box<ChangePolicy> = match excess_strategy {
         CsExcessStrategy::BestStrategy => {
             Box::new(bdk_coin_select::change_policy::min_value_and_waste(
                 drain_weights,
@@ -387,24 +388,37 @@ pub fn create_spend_solution(
         ),
     };
 
-    let mut coin_selector = CoinSelector::new(&candidates, transaction.weight().to_wu() as u32);
+    let lowest_fee_metric = bdk_coin_select::metrics::LowestFee {
+        target,
+        long_term_feerate,
+        change_policy: &drain_policy,
+    };
+    let waste_metric = bdk_coin_select::metrics::WasteChangeless::new(target, long_term_feerate);
+
+    let mut selection = CoinSelector::new(&candidates, transaction.weight().to_wu() as u32);
 
     // pre-selection
     for (index, (must_select, _)) in raw_candidates.iter().enumerate() {
         if *must_select {
-            coin_selector.select(index);
+            selection.select(index);
         }
     }
 
     match &algorithm {
-        CsAlgorithm::Bnb { bnb_rounds, .. } => {
-            let metric = bdk_coin_select::metrics::LowestFee {
-                target,
-                long_term_feerate,
-                change_policy: &change_policy,
+        CsAlgorithm::Bnb {
+            metric,
+            bnb_rounds,
+            fallback,
+        } => {
+            let bnb_result = match metric {
+                CsBnbMetric::Waste => selection.run_bnb(waste_metric, *bnb_rounds),
+                CsBnbMetric::LowestFee => selection.run_bnb(lowest_fee_metric, *bnb_rounds),
             };
-            if let Err(bnb_err) = coin_selector.run_bnb(metric, *bnb_rounds) {
-                coin_selector.sort_candidates_by_descending_value_pwu();
+            if let Err(bnb_err) = bnb_result {
+                if !*fallback {
+                    return Err(CsSolutionError::NoBnbSolution(bnb_err));
+                }
+                selection.sort_candidates_by_descending_value_pwu();
                 println!(
                     "Error: {} Falling back to select until target met.",
                     bnb_err
@@ -413,28 +427,28 @@ pub fn create_spend_solution(
         }
         CsAlgorithm::SelectUntilFinished { candidate_order } => match candidate_order {
             CsCandidateOrder::Largest => {
-                coin_selector.sort_candidates_by_key(|(_, c)| Reverse(c.value))
+                selection.sort_candidates_by_key(|(_, c)| Reverse(c.value))
             }
-            CsCandidateOrder::Smallest => coin_selector.sort_candidates_by_key(|(_, c)| c.value),
+            CsCandidateOrder::Smallest => selection.sort_candidates_by_key(|(_, c)| c.value),
             CsCandidateOrder::Oldest => {
-                coin_selector.sort_candidates_by_key(|(i, _)| raw_candidates[i].1.chain_position)
+                selection.sort_candidates_by_key(|(i, _)| raw_candidates[i].1.chain_position)
             }
-            CsCandidateOrder::Newest => coin_selector
+            CsCandidateOrder::Newest => selection
                 .sort_candidates_by_key(|(i, _)| Reverse(raw_candidates[i].1.chain_position)),
         },
     };
 
     // ensure target is met
-    coin_selector
-        .select_until_target_met(target, change_policy(&coin_selector, target))
+    selection
+        .select_until_target_met(target, drain_policy(&selection, target))
         .map_err(CsSolutionError::SelectionError)?;
 
     // get the selected utxos
-    let selected_txos = coin_selector
+    let selected_txos = selection
         .apply_selection(&raw_candidates)
         .collect::<Vec<_>>();
 
-    let drain = change_policy(&coin_selector, target);
+    let drain = drain_policy(&selection, target);
     if drain.is_some() {
         transaction.output.push(TxOut {
             value: drain.value,
@@ -443,8 +457,10 @@ pub fn create_spend_solution(
     }
 
     // get metrics
-    let waste = coin_selector.waste(target, long_term_feerate, drain, 1.0);
-    let actual_feerate = coin_selector.implied_feerate(target.value, drain);
+    let waste = selection.waste(target, long_term_feerate, drain, 1.0);
+    let actual_fee =
+        selection.selected_value() - transaction.output.iter().map(|o| o.value).sum::<u64>();
+    let actual_feerate = actual_fee as f32 / transaction.vsize() as f32;
 
     // fill transaction inputs
     transaction.input = selected_txos
@@ -512,11 +528,10 @@ pub fn create_spend_solution(
     }
 
     let metrics = CsMetrics {
-        waste: waste.abs() as _,
-        feerate_deviation: {
-            let req_rate = scenario.fee_rate;
-            actual_feerate.as_sat_vb() - req_rate
-        },
+        waste,
+        fee: actual_fee,
+        feerate: actual_feerate,
+        feerate_deviation: actual_feerate - scenario.fee_rate,
         used_excess_strategy: CsExcessStrategy::from_drain(&drain),
         tx_size: transaction.vsize() as _,
     };
@@ -527,8 +542,7 @@ pub fn create_spend_solution(
 #[derive(Debug, Clone)]
 pub enum CsSolutionError {
     NoChainTip,
-    // NoBnbSolution,
-    // ExcessStrategyUnavailable(bdk_coin_select::ExcessStrategyKind),
+    NoBnbSolution(bdk_coin_select::NoBnbSolution),
     SelectionError(bdk_coin_select::InsufficientFunds),
     SigningError(bdk_tmp_plan::SigningError),
 }
