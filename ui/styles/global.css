@@ -102,7 +102,7 @@
 }
 
 .app {
-    @apply box-border h-screen relative z-10 grid place-items-center mx-auto  px-8 py-8;
+    @apply box-border h-screen relative z-10 grid place-items-center mx-auto  px-8 py-8 max-w-[1500px];
 }
 
 .main_frame {
