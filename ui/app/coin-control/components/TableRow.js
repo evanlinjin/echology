@@ -1,8 +1,11 @@
 import SelectionDropdown from "@components/SelectionDropdown";
-import { memo, useCallback } from "react";
+import { memo, useCallback, useState } from "react";
 import { convertSelectedValue } from "@app/coin-control/components/converter";
+import { CopyToClipboard } from "react-copy-to-clipboard";
 
 const TableRow = ({ coin, index, setCoinsToView, coinsToView }) => {
+  const [showCopied, setShowCopied] = useState(false);
+
   if (!coin) {
     return null;
   }
@@ -31,18 +34,33 @@ const TableRow = ({ coin, index, setCoinsToView, coinsToView }) => {
     return `${id.substring(0, 10)}.....${id.substring(id.length - 10)}`;
   };
 
-  const formattedOutPoint = idFormatter(outpoint);
   const formattedTxid = spent_by && idFormatter(spent_by["txid"]);
   return (
     <tr className="hover">
       <td>{index}</td>
-      <td>
+      <td className="h-[50px]">
         <SelectionDropdown
           mustSelect={must_select}
           onChange={handleChangeSelect}
         />
       </td>
-      <td className="input_field">{formattedOutPoint}</td>
+      <td
+        data-tip="Copied!"
+        className={`input_field h-[50px] ${
+          showCopied && "tooltip tooltip-top"
+        }`}
+      >
+        <CopyToClipboard
+          text={outpoint}
+          onCopy={() => {
+            setShowCopied(true);
+            setTimeout(() => setShowCopied(false), 1000);
+          }}
+          className="relative max-w-[550px] hover:cursor-pointer overflow-x-scroll"
+        >
+          <span>{outpoint}</span>
+        </CopyToClipboard>
+      </td>
       <td className="input_field text-center">{amount}</td>
       <td className="input_field text-center">{confirmations}</td>
       {spent_by ? (
