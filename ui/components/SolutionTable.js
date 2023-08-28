@@ -14,13 +14,13 @@ const SolutionTable = ({ solutions }) => {
     return null;
   }
   const titles = [
-    "Time",
     "Txid",
     "Algorithm",
-    "Excess Strategy",
-    "Waste Metric",
-    "Feerate Dev.",
+    "Change",
+    "Waste",
+    "Fee",
     "TX size",
+    "Feerate",
   ];
   const [details, setDetails] = useState("");
   const handleBroadcast = useCallback((hex) => {
@@ -60,20 +60,15 @@ const SolutionTable = ({ solutions }) => {
         <tbody>
           {solutions.length > 0 &&
             solutions.map((solution, index) => {
-              const { timestamp, txid, request, raw_tx } = solution;
-              const time = `${new Date(timestamp * 1000).getHours()}:${new Date(
-                timestamp * 1000,
-              ).getMinutes()}`;
-              const txId = `${txid?.substring(0, 6)}.....${txid?.substring(
-                txid.length - 6,
-              )}`;
+              const { txid, request, raw_tx } = solution;
               return (
                 <tr className="hover" key={`solution${txid}:${index}`}>
                   <td>{index}</td>
-                  <td className="input_field">{time}</td>
-                  <td className="input_field">{txId}</td>
+                  <td className="input_field break-words overflow-x-scroll max-w-[321px]">
+                    {txid}
+                  </td>
                   {request?.algorithm ? (
-                    <td className="input_field capitalize">
+                    <td className="input_field capitalize max-w-[150px]">
                       {request?.algorithm.split("_").join(" ")}
                     </td>
                   ) : (
@@ -85,34 +80,37 @@ const SolutionTable = ({ solutions }) => {
                         .split("_")
                         .join(" ")}
                   </td>
-                  <td className="input_field">
+                  <td className="input_field max-w-fit">
                     {solution["metrics"]
                       ? solution["metrics"]["waste"]
                       : undefined}
                   </td>
                   <td className="input_field">
-                    {solution["metrics"]
-                      ? solution["metrics"]["feerate_deviation"]
-                      : undefined}
+                    {solution["metrics"] && solution["metrics"]["fee"]}
                   </td>
                   <td className="input_field">
                     {solution["metrics"] && solution["metrics"]["tx_size"]}
                   </td>
-                  <td className="flex gap-6 items-center h-full pt-2">
-                    <button
-                      onClick={() => handleBroadcast(raw_tx)}
-                      className="tooltip tooltip-bottom"
-                      data-tip="Broadcast"
-                    >
-                      <RiBroadcastLine fontSize={24} />
-                    </button>
-                    <button
-                      className="tooltip tooltip-bottom"
-                      data-tip="More Detail"
-                      onClick={() => handleGetMoreDetails(raw_tx)}
-                    >
-                      <AiOutlineExclamationCircle fontSize={24} />
-                    </button>
+                  <td className="input_field">
+                    {solution["metrics"] && solution["metrics"]["feerate"]}
+                  </td>
+                  <td>
+                    <div className="flex gap-6">
+                      <button
+                        onClick={() => handleBroadcast(raw_tx)}
+                        className="tooltip tooltip-bottom"
+                        data-tip="Broadcast"
+                      >
+                        <RiBroadcastLine fontSize={24} />
+                      </button>
+                      <button
+                        className="tooltip tooltip-bottom"
+                        data-tip="More Detail"
+                        onClick={() => handleGetMoreDetails(raw_tx)}
+                      >
+                        <AiOutlineExclamationCircle fontSize={24} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
