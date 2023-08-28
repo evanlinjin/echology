@@ -456,12 +456,6 @@ pub fn create_spend_solution(
         });
     }
 
-    // get metrics
-    let waste = selection.waste(target, long_term_feerate, drain, 1.0);
-    let actual_fee =
-        selection.selected_value() - transaction.output.iter().map(|o| o.value).sum::<u64>();
-    let actual_feerate = actual_fee as f32 / transaction.vsize() as f32;
-
     // fill transaction inputs
     transaction.input = selected_txos
         .iter()
@@ -526,6 +520,12 @@ pub fn create_spend_solution(
             }
         }
     }
+
+    // get metrics
+    let waste = selection.waste(target, long_term_feerate, drain, 1.0);
+    let actual_fee =
+        selection.selected_value() - transaction.output.iter().map(|o| o.value).sum::<u64>();
+    let actual_feerate = actual_fee as f32 / transaction.vsize() as f32;
 
     let metrics = CsMetrics {
         waste,
