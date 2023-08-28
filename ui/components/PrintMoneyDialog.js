@@ -5,7 +5,7 @@ import { useCallback, useState } from "react";
 
 const COIN_VALUE_RANGE_1 = { label: "[1000...50,000]", value: 1000 };
 const COIN_VALUE_RANGE_2 = { label: "[50,000..100,000]", value: 5000 };
-const COIN_VALUE_RANGE_3 = { lable: "[100,000..500,000]", value: 100000 };
+const COIN_VALUE_RANGE_3 = { label: "[100,000..500,000]", value: 100000 };
 const COIN_VALUE_SELECTIONS = [
   COIN_VALUE_RANGE_1,
   COIN_VALUE_RANGE_2,
