@@ -139,6 +139,7 @@ Request Body:
     "algorithm": "bnb", // values: "bnb", "select_until_finished"
     // parameters are unique, based on the "algorithm" selected
     "parameters": {
+        "metric": "lowest_fee",
         "bnb_round": 2000,
         // UI text: Use fallback algorithm?
         "fallback": false,
