@@ -63,6 +63,7 @@ const SolutionTable = ({ solutions }) => {
         <tbody>
           {solutions.length > 0 &&
             solutions.map((solution, index) => {
+              console.log("solutions", solutions);
               const { txid, request, raw_tx } = solution;
               return (
                 <tr className="hover" key={`solution${txid}:${index}`}>
@@ -86,7 +87,21 @@ const SolutionTable = ({ solutions }) => {
                   </td>
                   {request?.algorithm ? (
                     <td className="input_field capitalize max-w-[150px]">
-                      {request?.algorithm.split("_").join(" ")}
+                      <span>{request.algorithm.split("_").join(" ")} </span>
+                      <span className="lowercase">
+                        (
+                        {(solution?.request?.parameters?.metric &&
+                          solution?.request?.parameters?.metric.replaceAll(
+                            "_",
+                            " ",
+                          )) ||
+                          (solution?.request?.parameters?.candidate_order &&
+                            solution?.request?.parameters?.candidate_order.replaceAll(
+                              "_",
+                              " ",
+                            ))}
+                        )
+                      </span>
                     </td>
                   ) : (
                     <td className="input_field">--</td>
