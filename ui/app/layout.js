@@ -42,6 +42,15 @@ export default function RootLayout({ children }) {
       lang="en"
       className={`${ibmPlexMono.className} ${ibmPlexMonoLocal.className} tracking-[1px]`}
     >
+      <head>
+        <title>Echology</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin />
+        <link
+          href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body>
         <main className="app">
           <div className="main_frame_no_padding grid place-items-center">
