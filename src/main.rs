@@ -19,25 +19,51 @@ use wally::*;
 mod echo;
 mod wally;
 
+enum ConfigProvider {
+    BitcoinD(bitcoind::BitcoinD),
+    Raw(String, bdk_bitcoind_rpc::bitcoincore_rpc::Auth),
+}
+
+impl ConfigProvider {
+    fn config(&self) -> (String, bdk_bitcoind_rpc::bitcoincore_rpc::Auth) {
+        match self {
+            ConfigProvider::BitcoinD(d) => (
+                d.rpc_url(),
+                bdk_bitcoind_rpc::bitcoincore_rpc::Auth::CookieFile(d.params.cookie_file.clone()),
+            ),
+            ConfigProvider::Raw(url, auth) => (url.clone(), auth.clone()),
+        }
+    }
+}
+
 #[async_std::main]
 async fn main() -> tide::Result<()> {
-    let bitcoind_exe = match std::env::var_os("ECHO_BITCOIND") {
-        Some(bitcoid_path) => bitcoind::BitcoinD::new(bitcoid_path)?,
-        #[cfg(feature = "internal_bitcoind")]
-        None => bitcoind::BitcoinD::from_downloaded()?,
-        #[cfg(not(feature = "internal_bitcoind"))]
-        None => panic!("please provide ECHO_BITCOIND"),
-    };
     let env_blocktime = std::env::var("ECHO_BLOCKTIME")?.parse::<u64>()?;
     let env_bind = std::env::var("ECHO_BIND")?;
+
     let env_tls_cert = std::env::var_os("ECHO_TLS_CERT");
     let env_tls_key = std::env::var_os("ECHO_TLS_KEY");
     let env_static = std::env::var_os("ECHO_STATIC");
 
-    let auth = bdk_bitcoind_rpc::bitcoincore_rpc::Auth::CookieFile(
-        bitcoind_exe.params.cookie_file.clone(),
-    );
-    let (state, join_handles) = Echology::new(&bitcoind_exe.rpc_url(), &auth, env_blocktime)?;
+    let env_bitcoind_rpc = std::env::var_os("ECHO_BITCOIND_RPC");
+    let env_bitcoind_cookie = std::env::var_os("ECHO_BITCOIND_COOKIE");
+
+    let provider = match std::env::var_os("ECHO_BITCOIND") {
+        Some(bitcoid_path) => ConfigProvider::BitcoinD(bitcoind::BitcoinD::new(bitcoid_path)?),
+        #[cfg(feature = "internal_bitcoind")]
+        None => ConfigProvider::BitcoinD(bitcoind::BitcoinD::from_downloaded()?),
+        #[cfg(not(feature = "internal_bitcoind"))]
+        None => {
+            let url = env_bitcoind_rpc.expect("missing env: ECHO_BITCOIND_RPC");
+            let cookie = env_bitcoind_cookie.expect("missing env: ECHO_BITCOIND_COOKIE");
+            ConfigProvider::Raw(
+                url.into_string().expect("invalid url"),
+                bdk_bitcoind_rpc::bitcoincore_rpc::Auth::CookieFile(cookie.into()),
+            )
+        }
+    };
+    let (rpc_url, auth) = provider.config();
+    let (state, join_handles) = Echology::new(&rpc_url, &auth, env_blocktime)?;
 
     let mut app = tide::with_state(state);
 
