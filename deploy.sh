@@ -11,9 +11,10 @@ export ECHO_BITCOIND_COOKIE="${BITCOIND_DATADIR}/regtest/.cookie"
 
 end_bitcoind() {
     kill $(cat "${BITCOIND_DATADIR}/regtest/bitcoind.pid")
+    rm -rf "${BITCOIND_DATADIR}"
 }
 
-trap end_bitcoind
+trap end_bitcoind SIGINT SIGTERM EXIT
 
 mkdir -p "${BITCOIND_DATADIR}" || exit
 
