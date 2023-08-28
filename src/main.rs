@@ -3,10 +3,10 @@ use std::sync::atomic;
 
 use bdk_bitcoind_rpc::bitcoincore_rpc::jsonrpc::serde_json::Value;
 use bdk_bitcoind_rpc::bitcoincore_rpc::RawTx;
+use bdk_bitcoind_rpc::bitcoincore_rpc::RpcApi;
 use bdk_chain::bitcoin::Address;
 use bdk_chain::bitcoin::Amount;
 use bitcoind::anyhow::anyhow;
-use bitcoind::bitcoincore_rpc::RpcApi;
 use echo::*;
 use miniscript::bitcoin::address::NetworkUnchecked;
 use tide::prelude::*;
@@ -34,7 +34,10 @@ async fn main() -> tide::Result<()> {
     let env_tls_key = std::env::var_os("ECHO_TLS_KEY");
     let env_static = std::env::var_os("ECHO_STATIC");
 
-    let (state, join_handles) = Echology::new(bitcoind_exe, env_blocktime)?;
+    let auth = bdk_bitcoind_rpc::bitcoincore_rpc::Auth::CookieFile(
+        bitcoind_exe.params.cookie_file.clone(),
+    );
+    let (state, join_handles) = Echology::new(&bitcoind_exe.rpc_url(), &auth, env_blocktime)?;
 
     let mut app = tide::with_state(state);
 
@@ -111,7 +114,7 @@ async fn network_broadcast(req: Request<Echology>) -> tide::Result {
         pub tx: String,
     }
     let q: Query = req.query()?;
-    let txid = req.state().bitcoind.client.send_raw_transaction(q.tx)?;
+    let txid = req.state().client.send_raw_transaction(q.tx)?;
     Ok(json!({ "txid": txid }).into())
 }
 
@@ -123,7 +126,6 @@ async fn decode(req: Request<Echology>) -> tide::Result {
     let q: Query = req.query()?;
     let v: Value = req
         .state()
-        .bitcoind
         .client
         .call("decoderawtransaction", &[q.tx.into()])?;
     Ok(v.into())
@@ -138,7 +140,7 @@ async fn faucet(req: Request<Echology>) -> tide::Result {
     }
     let q: Query = req.query()?;
 
-    let client = &req.state().bitcoind.client;
+    let client = &req.state().client;
     let txids = core::iter::repeat_with(|| {
         let seed = rand::random::<u64>();
         let amount = if (1000..50_000).contains(&q.amount) {
